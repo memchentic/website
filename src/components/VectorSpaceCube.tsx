@@ -90,7 +90,7 @@ export function VectorSpaceCube({ className = "" }: Props) {
       const y2 = yy * cp - z1 * sp;
       const z2 = yy * sp + z1 * cp;
       const dist = 3.2;
-      const scale = (Math.min(cssW, cssH) * 0.38) / (dist - z2);
+      const scale = (Math.min(cssW, cssH) * 0.55) / (dist - z2);
       return {
         sx: cssW / 2 + x1 * scale,
         sy: cssH / 2 - y2 * scale,
