@@ -26,6 +26,11 @@ const ITEMS = [
     title: "Agent-native",
     body: "MCP-first, with a polished console when humans need to look.",
   },
+  {
+    idx: "06",
+    title: "Corpus metrics",
+    body: "See growth, types, spaces, and creators — ACL-scoped, without paging every memory.",
+  },
 ] as const;
 
 /**

@@ -1,6 +1,7 @@
 import { LINKS } from "../constants";
 import { SessionTrayProvider } from "../context/SessionTrayContext";
 import { AccessDoor } from "./AccessDoor";
+import { CorpusPulse } from "./CorpusPulse";
 import { DeployCable } from "./DeployCable";
 import { HybridFusion } from "./HybridFusion";
 import { KindConstellation } from "./KindConstellation";
@@ -272,7 +273,38 @@ export function LandingPage() {
           </div>
         </Reveal>
 
-        <Reveal className="band band-alt" id="why">
+        <Reveal className="band band-alt" id="metrics">
+          <div className="site-shell py-24">
+            <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
+              Corpus metrics
+            </p>
+            <h2 className="max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+              See the shape of what your agents remember.
+            </h2>
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
+              The console ships a Metrics view — totals, created-over-time,
+              entry types, spaces, tags, and creators — scoped by the same ACL
+              as every memory read. Operators get a pulse without paging the
+              whole corpus.
+            </p>
+            <div className="mt-16 grid items-start gap-10 sm:mt-20 lg:grid-cols-2 lg:gap-14">
+              <CorpusPulse />
+              <figure className="metrics-shot-frame m-0">
+                <img
+                  src={`${import.meta.env.BASE_URL}screenshots/metrics.png`}
+                  alt="Memchentic Metrics page with colored charts for entries, guides, types, and spaces"
+                  className="metrics-shot"
+                  width={1440}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </figure>
+            </div>
+          </div>
+        </Reveal>
+
+        <Reveal className="band" id="why">
           <div className="site-shell py-24">
             <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
               Why people adopt it

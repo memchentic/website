@@ -1936,6 +1936,182 @@ body {
   }
 }
 
+/* —— Corpus metrics (pitch flare) —— */
+.corpus-pulse {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  padding: 1.25rem 1.35rem 1.4rem;
+}
+
+.corpus-pulse-chrome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.corpus-pulse-k {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+.corpus-pulse-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.corpus-pulse-swatch {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-left: 0.35rem;
+}
+
+.corpus-pulse-swatch:first-child {
+  margin-left: 0;
+}
+
+.corpus-pulse-swatch-entry {
+  background: #8eb4f0;
+}
+
+.corpus-pulse-swatch-guide {
+  background: #6ec8d8;
+}
+
+.corpus-pulse-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .corpus-pulse-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.corpus-pulse-kpi {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 0.7rem 0.85rem;
+}
+
+.corpus-pulse-kpi-label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.corpus-pulse-kpi-value {
+  margin-top: 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.corpus-pulse-kpi-entry .corpus-pulse-kpi-value {
+  color: #8eb4f0;
+}
+
+.corpus-pulse-kpi-guide .corpus-pulse-kpi-value {
+  color: #6ec8d8;
+}
+
+.corpus-pulse-kpi-warn .corpus-pulse-kpi-value {
+  color: #e0b060;
+}
+
+.corpus-pulse-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0.25rem 0 1rem;
+  opacity: 0.35;
+  transform: translateY(6px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+
+.corpus-pulse-chart.is-on,
+.corpus-pulse.is-active .corpus-pulse-chart {
+  opacity: 1;
+  transform: none;
+}
+
+.corpus-pulse-types {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.corpus-pulse-types button {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.2rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: opacity 0.18s ease;
+}
+
+.corpus-pulse-types button.is-dim {
+  opacity: 0.35;
+}
+
+.corpus-pulse-bar {
+  display: block;
+  height: 0.45rem;
+  min-width: 0.35rem;
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.corpus-pulse:not(.is-active) .corpus-pulse-bar {
+  width: 0 !important;
+}
+
+.corpus-pulse-count {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+  text-align: right;
+}
+
+.metrics-shot-frame {
+  margin-top: 1.75rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.metrics-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: top;
+}
+
 /* Closing CTA band */
 .cta-band {
   position: relative;
@@ -1948,8 +2124,20 @@ body {
   .reveal.is-visible .amnesia-line-b,
   .reveal.is-visible .amnesia-line-c,
   .hybrid-fusion.is-fused .hybrid-rrf-row,
-  .why-rotator-card {
+  .why-rotator-card,
+  .corpus-pulse-chart,
+  .corpus-pulse-bar {
     animation: none !important;
+    transition: none !important;
+  }
+
+  .corpus-pulse-chart {
+    opacity: 1;
+    transform: none;
+  }
+
+  .corpus-pulse:not(.is-active) .corpus-pulse-bar {
+    width: auto;
   }
 
   .hybrid-rrf-row {
