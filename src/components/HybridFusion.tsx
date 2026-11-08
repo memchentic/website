@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { FUSION_LEGS } from "../data/showcase";
-import { useSessionTray } from "../context/SessionTrayContext";
 
 /**
  * Three retrieval legs → reciprocal rank fusion. Auto-fuses when scrolled into
@@ -9,8 +8,6 @@ import { useSessionTray } from "../context/SessionTrayContext";
 export function HybridFusion() {
   const rootRef = useRef<HTMLDivElement>(null);
   const [fused, setFused] = useState(false);
-  const { collect } = useSessionTray();
-  const didCollect = useRef(false);
 
   useEffect(() => {
     const el = rootRef.current;
@@ -24,17 +21,6 @@ export function HybridFusion() {
     io.observe(el);
     return () => io.disconnect();
   }, []);
-
-  useEffect(() => {
-    if (!fused || didCollect.current) return;
-    didCollect.current = true;
-    const top = FUSION_LEGS.rrf[0];
-    collect({
-      id: "fusion-top",
-      kind: top.kind,
-      label: top.title,
-    });
-  }, [fused, collect]);
 
   return (
     <div

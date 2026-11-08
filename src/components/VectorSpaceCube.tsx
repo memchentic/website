@@ -5,7 +5,6 @@ import {
   type MemoryKind,
   type VectorPoint,
 } from "../data/showcase";
-import { useSessionTray } from "../context/SessionTrayContext";
 
 type Props = {
   className?: string;
@@ -19,7 +18,6 @@ export function VectorSpaceCube({ className = "" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const points = useMemo(() => buildVectorCloud(), []);
-  const { collect } = useSessionTray();
 
   const [yaw, setYaw] = useState(0.55);
   const [pitch, setPitch] = useState(0.35);
@@ -270,11 +268,6 @@ export function VectorSpaceCube({ className = "" }: Props) {
             if (dx < 4 && dy < 4) {
               const hit = hitTest(e.clientX, e.clientY);
               if (hit) {
-                collect({
-                  id: `vec-${hit.id}`,
-                  kind: hit.kind,
-                  label: hit.label,
-                });
               }
             }
           }

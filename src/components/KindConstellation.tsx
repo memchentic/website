@@ -4,7 +4,6 @@ import {
   MEMORY_KINDS,
   type MemoryKind,
 } from "../data/showcase";
-import { useSessionTray } from "../context/SessionTrayContext";
 
 /**
  * Interactive memory-kind deck — hover or focus a kind to preview its digest;
@@ -12,7 +11,6 @@ import { useSessionTray } from "../context/SessionTrayContext";
  */
 export function KindConstellation() {
   const [active, setActive] = useState<MemoryKind>("insight");
-  const { collect } = useSessionTray();
   const meta = MEMORY_KINDS.find((k) => k.tag === active)!;
   const digest = KIND_DIGESTS[active];
 
@@ -32,11 +30,6 @@ export function KindConstellation() {
               onFocus={() => setActive(k.tag)}
               onClick={() => {
                 setActive(k.tag);
-                collect({
-                  id: `kind-${k.tag}`,
-                  kind: k.tag,
-                  label: KIND_DIGESTS[k.tag].title,
-                });
               }}
               aria-pressed={active === k.tag}
             >

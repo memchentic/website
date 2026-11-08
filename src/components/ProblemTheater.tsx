@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useSessionTray } from "../context/SessionTrayContext";
 
 type Beat = "paste" | "wipe" | "recall";
 
@@ -9,8 +8,6 @@ type Beat = "paste" | "wipe" | "recall";
 export function ProblemTheater() {
   const rootRef = useRef<HTMLDivElement>(null);
   const [beat, setBeat] = useState<Beat>("paste");
-  const { collect } = useSessionTray();
-  const recalled = useRef(false);
 
   useEffect(() => {
     const el = rootRef.current;
@@ -41,16 +38,6 @@ export function ProblemTheater() {
       io.disconnect();
     };
   }, []);
-
-  useEffect(() => {
-    if (beat !== "recall" || recalled.current) return;
-    recalled.current = true;
-    collect({
-      id: "problem-recall",
-      kind: "insight",
-      label: "Failed approach: shared Redis for ledger locks",
-    });
-  }, [beat, collect]);
 
   return (
     <div

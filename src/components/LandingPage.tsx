@@ -1,5 +1,4 @@
 import { LINKS } from "../constants";
-import { SessionTrayProvider } from "../context/SessionTrayContext";
 import { AccessDoor } from "./AccessDoor";
 import { CorpusPulse } from "./CorpusPulse";
 import { DeployCable } from "./DeployCable";
@@ -8,7 +7,6 @@ import { KindConstellation } from "./KindConstellation";
 import { McpSessionDemo } from "./McpSessionDemo";
 import { ProblemTheater } from "./ProblemTheater";
 import { Reveal } from "./Reveal";
-import { SessionTray } from "./SessionTray";
 import { VectorSpaceCube } from "./VectorSpaceCube";
 import { WhyRotator } from "./WhyRotator";
 
@@ -45,7 +43,7 @@ function Mark({ className = "" }: { className?: string }) {
 
 export function LandingPage() {
   return (
-    <SessionTrayProvider>
+    <>
       <div className="page">
         <header id="top" className="hero">
           <div className="hero-media" aria-hidden="true">
@@ -379,8 +377,7 @@ export function LandingPage() {
           </div>
         </footer>
 
-        <SessionTray />
       </div>
-    </SessionTrayProvider>
+    </>
   );
 }

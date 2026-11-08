@@ -1183,7 +1183,6 @@ body {
 .kind-digest-k,
 .access-door-k,
 .deploy-cable-n,
-.session-tray-k,
 .problem-stage-tag {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.6875rem;
@@ -1835,105 +1834,6 @@ body {
 .why-rotator-dots button.is-on {
   background: oklch(0.85 0 0);
   width: 1.15rem;
-}
-
-/* Sticky working-set tray */
-.session-tray {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 40;
-  border-top: 1px solid var(--color-border);
-  background: oklch(0.12 0 0 / 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.page {
-  padding-bottom: 0;
-}
-
-.page:has(.session-tray) {
-  padding-bottom: 4.5rem;
-}
-
-.session-tray-inner {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.75rem 1rem;
-  align-items: center;
-  padding-block: 0.7rem;
-}
-
-.session-tray-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.session-tray-count {
-  font-size: 0.75rem;
-  color: var(--color-muted);
-}
-
-.session-tray-chips {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.55rem;
-  min-width: 0;
-}
-
-.session-tray-chips li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.session-tray-label {
-  font-size: 0.75rem;
-  color: var(--color-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 12rem;
-}
-
-.session-tray-clear {
-  appearance: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-muted);
-  font-size: 0.75rem;
-  padding: 0.35rem 0.65rem;
-  cursor: pointer;
-}
-
-.session-tray-clear:hover {
-  color: var(--color-ink);
-}
-
-@media (max-width: 639px) {
-  .session-tray-inner {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .session-tray-meta {
-    grid-column: 1 / -1;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: baseline;
-  }
-
-  .session-tray-label {
-    display: none;
-  }
 }
 
 /* —— Corpus metrics (pitch flare) —— */
