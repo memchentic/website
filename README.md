@@ -22,6 +22,8 @@ npm run preview
 
 Vite `base` defaults to `/website/` for GitHub Pages. Homelab/container builds set `VITE_BASE=/` (see `docker/Dockerfile`). Push to `main` deploys Pages via `.github/workflows/pages.yml`.
 
+Homelab Swarm image: workflow_dispatch **Publish Website Image** → `ghcr.io/memchentic/website:<semver>` (multi-arch). Pin that tag in `homelab` `terraform/swarm/memchentic/website/main.tf`.
+
 ## Nested checkout
 
 This repo is meant to live as a nested git tree under a memchentic monorepo checkout at `website/` (same pattern as `docs/`). The parent ignores `website/`; commit and push here.
