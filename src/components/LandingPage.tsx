@@ -59,7 +59,7 @@ export function LandingPage() {
             <div className="hero-scrim" />
           </div>
 
-          <nav className="hero-nav site-shell flex items-center justify-between py-5">
+          <nav className="hero-nav flex items-center justify-between py-5">
             <a
               href="#top"
               className="flex items-center gap-2 text-ink no-underline"

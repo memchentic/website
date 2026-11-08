@@ -210,6 +210,18 @@ body {
   z-index: 1;
 }
 
+/* Nav sits on the viewport edges — not the content shell max-width. */
+.hero-nav {
+  width: 100%;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .hero-nav {
+    padding-inline: 1.25rem;
+  }
+}
+
 /* Hero copy: always right — background stays left-biased so the shot reads like desktop */
 .hero-stage .anim-hero-copy {
   margin-left: auto;
