@@ -2,7 +2,7 @@
 
 Public product pitch site for [memchentic](https://github.com/memchentic/memchentic).
 
-Live (homelab): [https://memchentic.nodadyoushutup.com/](https://memchentic.nodadyoushutup.com/)
+Live: [https://memchentic.ai/](https://memchentic.ai/)
 
 GitHub Pages mirror: [https://memchentic.github.io/website/](https://memchentic.github.io/website/)
 
