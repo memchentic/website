@@ -41,7 +41,7 @@ export function HybridFusion() {
         </button>
       </div>
 
-      <div className="hybrid-fusion-legs" aria-hidden={fused}>
+      <div className="hybrid-fusion-legs">
         {(
           [
             ["sql", "Relational", FUSION_LEGS.sql],

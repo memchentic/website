@@ -1312,8 +1312,9 @@ body {
 }
 
 .hybrid-fusion.is-fused .hybrid-fusion-legs {
-  opacity: 0.35;
-  filter: saturate(0.7);
+  /* Soft settle after fuse — stay readable next to fused digests */
+  opacity: 0.9;
+  filter: none;
 }
 
 .hybrid-leg {
@@ -2054,6 +2055,15 @@ body {
 
   .hybrid-rrf-row {
     opacity: 1;
+    transform: none;
+  }
+
+  .hybrid-fusion.is-fused .hybrid-fusion-legs {
+    opacity: 1;
+    filter: none;
+  }
+
+  .hybrid-fusion.is-fused .hybrid-leg {
     transform: none;
   }
 
