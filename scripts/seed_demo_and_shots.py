@@ -51,9 +51,11 @@ USERS = [
     },
 ]
 
+# owner creates the group (delete control); members always include the owner.
 GROUPS = [
     {
         "name": "Platform Engineering",
+        "owner": "jordan.lee@northline.io",
         "members": [
             "jordan.lee@northline.io",
             "priya.shah@northline.io",
@@ -63,6 +65,7 @@ GROUPS = [
     },
     {
         "name": "Payments Core",
+        "owner": "jordan.lee@northline.io",
         "members": [
             "jordan.lee@northline.io",
             "priya.shah@northline.io",
@@ -71,6 +74,7 @@ GROUPS = [
     },
     {
         "name": "Incident Response",
+        "owner": "marcus.chen@northline.io",
         "members": [
             "marcus.chen@northline.io",
             "sofia.ramos@northline.io",
@@ -79,6 +83,7 @@ GROUPS = [
     },
     {
         "name": "Agent Tooling",
+        "owner": "alex.kim@northline.io",
         "members": [
             "alex.kim@northline.io",
             "jordan.lee@northline.io",
@@ -164,13 +169,21 @@ def ensure_user(admin_token: str, email: str, display_name: str) -> str:
     return str(me["id"])
 
 
-def ensure_group(token: str, name: str) -> str:
-    spaces = api_json("GET", "/api/spaces", token=token)
+def ensure_group(owner_token: str, admin_token: str, name: str, owner_id: str) -> str:
+    """Return group id owned by ``owner_id``; recreate if owned by someone else."""
+    spaces = api_json("GET", "/api/spaces", token=admin_token)
     assert isinstance(spaces, list)
     for space in spaces:
-        if space.get("name") == name and space.get("kind") == "group":
+        if space.get("name") != name or space.get("kind") != "group":
+            continue
+        detail = api_json("GET", f"/api/spaces/{space['id']}", token=admin_token)
+        assert isinstance(detail, dict)
+        if detail.get("created_by") == owner_id:
             return str(space["id"])
-    created = api_json("POST", "/api/spaces", token=token, body={"name": name})
+        # Wrong owner (older seed) — admin break-glass delete, then recreate.
+        api_json("DELETE", f"/api/spaces/{space['id']}", token=admin_token)
+        break
+    created = api_json("POST", "/api/spaces", token=owner_token, body={"name": name})
     assert isinstance(created, dict)
     return str(created["id"])
 
@@ -232,23 +245,28 @@ def seed(admin_token: str) -> None:
         uid = ensure_user(admin_token, user["email"], user["display_name"])
         print(f"  {user['display_name']} ({user['role']}) ok id={uid[:8]}…")
 
-    # Create groups as Platform Lead so ownership looks natural
-    lead_token = login("jordan.lee@northline.io", DEMO_PASSWORD)
     print("Ensuring groups…")
+    tokens = {u["email"]: login(u["email"], DEMO_PASSWORD) for u in USERS}
+    owner_ids = {
+        email: str(api_json("GET", "/api/me", token=tok)["id"])  # type: ignore[index]
+        for email, tok in tokens.items()
+    }
     group_ids: dict[str, str] = {}
     for group in GROUPS:
-        gid = ensure_group(lead_token, group["name"])
+        owner_email = str(group["owner"])
+        owner_token = tokens[owner_email]
+        gid = ensure_group(
+            owner_token, admin_token, group["name"], owner_ids[owner_email]
+        )
         group_ids[group["name"]] = gid
         for email in group["members"]:
-            if email == "jordan.lee@northline.io":
+            if email == owner_email:
                 continue
-            add_member(lead_token, gid, email)
-        print(f"  {group['name']} members={len(group['members'])}")
-
-    # Tokens per user
-    tokens = {
-        u["email"]: login(u["email"], DEMO_PASSWORD) for u in USERS
-    }
+            add_member(owner_token, gid, email)
+        print(
+            f"  {group['name']} owner={owner_email.split('@')[0]} "
+            f"members={len(group['members'])}"
+        )
 
     print("Writing memories + guides…")
 
@@ -531,7 +549,10 @@ def capture_screenshots(login_email: str, login_password: str) -> None:
 
         page.locator("table tbody tr", has_text="Platform Engineering").first.click()
         page.wait_for_url("**/groups/**", timeout=30000)
-        page.wait_for_timeout(1500)
+        # Owned group: Rename + Delete (trash); remove-member trash on roster.
+        page.locator("button[aria-label='Delete']").wait_for(timeout=10000)
+        page.locator("button[aria-label='Remove']").first.wait_for(timeout=10000)
+        page.wait_for_timeout(1200)
         page.screenshot(path=str(SHOT_DIR / "group-detail.png"), full_page=False)
         print(f"Wrote {SHOT_DIR / 'group-detail.png'}")
 
