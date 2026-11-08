@@ -195,3 +195,24 @@ body {
   border-top: 1px solid var(--color-border);
   margin: 0;
 }
+
+.shot-frame {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  box-shadow: 0 24px 80px -32px oklch(0 0 0 / 0.85);
+}
+
+.shot-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+.shot-caption {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-faint);
+}

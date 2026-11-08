@@ -1,4 +1,4 @@
 export const LINKS = {
   github: "https://github.com/memchentic/memchentic",
-  docs: "https://github.com/memchentic/docs",
+  docs: "https://docs.memchentic.nodadyoushutup.com/",
 } as const;

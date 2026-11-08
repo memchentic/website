@@ -91,20 +91,22 @@ export function LandingPage() {
           id="top"
           className="mx-auto flex min-h-[calc(100vh-4.5rem)] max-w-5xl flex-col justify-center px-6 pb-24 pt-8"
         >
-          <div className="anim-mark mb-10">
-            <Mark className="h-28 w-28 drop-shadow-[0_12px_40px_oklch(0_0_0_/_0.45)]" />
-          </div>
-          <div className="anim-hero-copy max-w-2xl">
-            <p className="mb-3 text-sm font-medium tracking-[0.14em] text-faint uppercase">
-              memchentic
-            </p>
-            <h1 className="font-display text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl md:text-[3.25rem]">
-              Memory that sticks with your agents
-            </h1>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted text-pretty">
-              Across sessions, tools, and people — so agents stop rediscovering
-              what you already taught them.
-            </p>
+          <div className="flex items-center gap-6 sm:gap-8">
+            <div className="anim-mark shrink-0">
+              <Mark className="h-20 w-20 drop-shadow-[0_12px_40px_oklch(0_0_0_/_0.45)] sm:h-28 sm:w-28" />
+            </div>
+            <div className="anim-hero-copy min-w-0 max-w-2xl">
+              <p className="mb-3 text-sm font-medium tracking-[0.14em] text-faint uppercase">
+                memchentic
+              </p>
+              <h1 className="font-display text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl md:text-[3.25rem]">
+                Memory that sticks with your agents
+              </h1>
+              <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted text-pretty">
+                Across sessions, tools, and people — so agents stop rediscovering
+                what you already taught them.
+              </p>
+            </div>
           </div>
           <div className="anim-hero-cta mt-10 flex flex-wrap gap-3">
             <a
@@ -203,6 +205,68 @@ export function LandingPage() {
               </li>
             ))}
           </ul>
+        </Reveal>
+
+        <hr className="section-rule mx-auto max-w-5xl" />
+
+        <Reveal className="mx-auto max-w-5xl px-6 py-24" id="product">
+          <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
+            The console
+          </p>
+          <h2 className="max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            Browse what agents remembered — by person and by group.
+          </h2>
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
+            Entries, guides, owners, and spaces in one greyscale console. Shared
+            groups keep team knowledge out of anyone&apos;s personal silo.
+          </p>
+          <figure className="mt-12">
+            <div className="shot-frame">
+              <img
+                src={`${import.meta.env.BASE_URL}screenshots/memories.png`}
+                alt="memchentic Memories page listing enterprise guides, decisions, and insights across shared groups"
+                width={1440}
+                height={900}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <figcaption className="shot-caption">
+              Memories — hybrid search across personal and group spaces
+            </figcaption>
+          </figure>
+          <div className="mt-10 grid gap-8 md:grid-cols-2">
+            <figure>
+              <div className="shot-frame">
+                <img
+                  src={`${import.meta.env.BASE_URL}screenshots/groups.png`}
+                  alt="memchentic Groups page showing Platform Engineering, Payments Core, Incident Response, and Agent Tooling"
+                  width={1440}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption className="shot-caption">
+                Groups — shared collections with membership and roles
+              </figcaption>
+            </figure>
+            <figure>
+              <div className="shot-frame">
+                <img
+                  src={`${import.meta.env.BASE_URL}screenshots/group-detail.png`}
+                  alt="Platform Engineering group detail with Jordan Lee, Priya Shah, Marcus Chen, and Alex Kim"
+                  width={1440}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption className="shot-caption">
+                Group detail — who can see shared memory
+              </figcaption>
+            </figure>
+          </div>
         </Reveal>
 
         <hr className="section-rule mx-auto max-w-5xl" />
