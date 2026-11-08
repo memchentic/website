@@ -1,5 +1,11 @@
+import { useCallback, useState } from "react";
 import { LINKS } from "../constants";
+import {
+  ImageLightbox,
+  type LightboxImage,
+} from "./ImageLightbox";
 import { Reveal } from "./Reveal";
+import { ZoomableShot } from "./ZoomableShot";
 
 const ENTRY_TYPES = [
   { name: "Facts & decisions", blurb: "What is true, and what you already chose." },
@@ -47,6 +53,10 @@ function Mark({ className = "" }: { className?: string }) {
 }
 
 export function LandingPage() {
+  const [lightbox, setLightbox] = useState<LightboxImage | null>(null);
+  const closeLightbox = useCallback(() => setLightbox(null), []);
+  const base = import.meta.env.BASE_URL;
+
   return (
     <>
       <div className="site-atmosphere" aria-hidden="true" />
@@ -220,52 +230,45 @@ export function LandingPage() {
             Entries, guides, owners, and spaces in one greyscale console. Shared
             groups keep team knowledge out of anyone&apos;s personal silo.
           </p>
-          <figure className="mt-12">
-            <div className="shot-frame">
-              <img
-                src={`${import.meta.env.BASE_URL}screenshots/memories.png`}
-                alt="memchentic Memories page listing enterprise guides, decisions, and insights across shared groups"
-                width={1440}
-                height={900}
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <figcaption className="shot-caption">
-              Memories — hybrid search across personal and group spaces
-            </figcaption>
-          </figure>
+          <div className="mt-12">
+            <ZoomableShot
+              src={`${base}screenshots/memories.png`}
+              alt="memchentic Memories page listing enterprise guides, decisions, and insights across shared groups"
+              caption="Memories — hybrid search across personal and group spaces"
+              onZoom={() =>
+                setLightbox({
+                  src: `${base}screenshots/memories.png`,
+                  alt: "memchentic Memories page listing enterprise guides, decisions, and insights across shared groups",
+                  caption: "Memories — hybrid search across personal and group spaces",
+                })
+              }
+            />
+          </div>
           <div className="mt-10 grid gap-8 md:grid-cols-2">
-            <figure>
-              <div className="shot-frame">
-                <img
-                  src={`${import.meta.env.BASE_URL}screenshots/groups.png`}
-                  alt="memchentic Groups page showing Platform Engineering, Payments Core, Incident Response, and Agent Tooling"
-                  width={1440}
-                  height={900}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption className="shot-caption">
-                Groups — shared collections with membership and roles
-              </figcaption>
-            </figure>
-            <figure>
-              <div className="shot-frame">
-                <img
-                  src={`${import.meta.env.BASE_URL}screenshots/group-detail.png`}
-                  alt="Platform Engineering group detail with Jordan Lee, Priya Shah, Marcus Chen, and Alex Kim"
-                  width={1440}
-                  height={900}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption className="shot-caption">
-                Group detail — who can see shared memory
-              </figcaption>
-            </figure>
+            <ZoomableShot
+              src={`${base}screenshots/groups.png`}
+              alt="memchentic Groups page showing Platform Engineering, Payments Core, Incident Response, and Agent Tooling"
+              caption="Groups — shared collections with membership and roles"
+              onZoom={() =>
+                setLightbox({
+                  src: `${base}screenshots/groups.png`,
+                  alt: "memchentic Groups page showing Platform Engineering, Payments Core, Incident Response, and Agent Tooling",
+                  caption: "Groups — shared collections with membership and roles",
+                })
+              }
+            />
+            <ZoomableShot
+              src={`${base}screenshots/group-detail.png`}
+              alt="Platform Engineering group detail with Jordan Lee, Priya Shah, Marcus Chen, and Alex Kim"
+              caption="Group detail — who can see shared memory"
+              onZoom={() =>
+                setLightbox({
+                  src: `${base}screenshots/group-detail.png`,
+                  alt: "Platform Engineering group detail with Jordan Lee, Priya Shah, Marcus Chen, and Alex Kim",
+                  caption: "Group detail — who can see shared memory",
+                })
+              }
+            />
           </div>
         </Reveal>
 
@@ -414,6 +417,7 @@ export function LandingPage() {
           </div>
         </footer>
       </div>
+      <ImageLightbox image={lightbox} onClose={closeLightbox} />
     </>
   );
 }
