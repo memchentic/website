@@ -155,11 +155,26 @@ body {
   object-position: left 28%;
 }
 
+/*
+ * Layered scrims crossfade on resize — background-image cannot interpolate,
+ * so desktop / tablet / phone washes live as separate layers with opacity.
+ */
 .hero-scrim {
   position: absolute;
   inset: 0;
+}
+
+.hero-scrim-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity;
+}
+
+.hero-scrim-layer--desktop {
+  opacity: 1;
   background:
-    /* Right-side copy legibility */
     linear-gradient(
       to left,
       oklch(0.12 0 0 / 0.97) 0%,
@@ -168,7 +183,6 @@ body {
       oklch(0.12 0 0 / 0.18) 68%,
       oklch(0.12 0 0 / 0.4) 100%
     ),
-    /* Kill app chrome — % so 4K scales with the covered screenshot */
     linear-gradient(
       to bottom,
       oklch(0.12 0 0 / 1) 0,
@@ -181,8 +195,7 @@ body {
     );
 }
 
-/* Soft blur ramps up toward the right with the darkening */
-.hero-scrim::before {
+.hero-scrim-layer--desktop::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -204,6 +217,122 @@ body {
   );
 }
 
+.hero-scrim-layer--tablet {
+  background:
+    linear-gradient(
+      to left,
+      oklch(0.12 0 0 / 0.98) 0%,
+      oklch(0.12 0 0 / 0.96) 28%,
+      oklch(0.12 0 0 / 0.88) 50%,
+      oklch(0.12 0 0 / 0.72) 72%,
+      oklch(0.12 0 0 / 0.78) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      oklch(0.12 0 0 / 1) 0,
+      oklch(0.12 0 0 / 1) 11%,
+      oklch(0.12 0 0 / 0.9) 14%,
+      oklch(0.12 0 0 / 0.45) 18%,
+      transparent 26%,
+      transparent 68%,
+      oklch(0.12 0 0 / 0.9) 100%
+    );
+}
+
+.hero-scrim-layer--tablet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  mask-image: linear-gradient(
+    to left,
+    black 0%,
+    rgb(0 0 0 / 0.95) 30%,
+    rgb(0 0 0 / 0.7) 55%,
+    rgb(0 0 0 / 0.4) 80%,
+    rgb(0 0 0 / 0.25) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to left,
+    black 0%,
+    rgb(0 0 0 / 0.95) 30%,
+    rgb(0 0 0 / 0.7) 55%,
+    rgb(0 0 0 / 0.4) 80%,
+    rgb(0 0 0 / 0.25) 100%
+  );
+}
+
+.hero-scrim-layer--phone {
+  background:
+    linear-gradient(
+      to left,
+      oklch(0.12 0 0 / 0.98) 0%,
+      oklch(0.12 0 0 / 0.97) 40%,
+      oklch(0.12 0 0 / 0.95) 70%,
+      oklch(0.12 0 0 / 0.93) 100%
+    ),
+    linear-gradient(
+      to top,
+      oklch(0.12 0 0 / 0.85) 0%,
+      oklch(0.12 0 0 / 0.5) 30%,
+      oklch(0.12 0 0 / 0.18) 50%,
+      transparent 65%
+    ),
+    linear-gradient(
+      to bottom,
+      oklch(0.12 0 0 / 1) 0,
+      oklch(0.12 0 0 / 1) 11%,
+      oklch(0.12 0 0 / 0.92) 14%,
+      oklch(0.12 0 0 / 0.5) 18%,
+      transparent 26%,
+      transparent 68%,
+      oklch(0.12 0 0 / 0.92) 100%
+    );
+}
+
+.hero-scrim-layer--phone::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  mask-image: linear-gradient(
+    to left,
+    black 0%,
+    rgb(0 0 0 / 0.97) 45%,
+    rgb(0 0 0 / 0.85) 75%,
+    rgb(0 0 0 / 0.7) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to left,
+    black 0%,
+    rgb(0 0 0 / 0.97) 45%,
+    rgb(0 0 0 / 0.85) 75%,
+    rgb(0 0 0 / 0.7) 100%
+  );
+}
+
+@media (max-width: 1023px) {
+  .hero-scrim-layer--desktop {
+    opacity: 0;
+  }
+
+  .hero-scrim-layer--tablet {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 639px) {
+  .hero-scrim-layer--tablet {
+    opacity: 0;
+  }
+
+  .hero-scrim-layer--phone {
+    opacity: 1;
+  }
+}
+
 .hero-nav,
 .hero-stage {
   position: relative;
@@ -213,20 +342,39 @@ body {
 /* Nav sits on the viewport edges — not the content shell max-width. */
 .hero-nav {
   width: 100%;
-  padding-inline: 1rem;
+  padding-inline: clamp(1rem, 0.85rem + 0.6vw, 1.25rem);
+  transition: padding-inline 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@media (min-width: 640px) {
-  .hero-nav {
-    padding-inline: 1.25rem;
-  }
+.hero-stage {
+  padding-bottom: clamp(4.5rem, 3.5rem + 3vw, 6rem);
+  transition: padding-bottom 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Hero copy: always right — background stays left-biased so the shot reads like desktop */
+/* Hero copy: always right — fluid width/gap; mark + type scale with viewport */
 .hero-stage .anim-hero-copy {
   margin-left: auto;
   margin-right: 0;
+  width: min(100%, 48rem);
+  max-width: clamp(22rem, 12rem + 40vw, 48rem);
+  gap: clamp(1.25rem, 0.9rem + 1.2vw, 2rem);
   text-align: left;
+  transition:
+    gap 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-mark {
+  display: block;
+  width: clamp(5rem, 3.25rem + 5vw, 8rem);
+  height: clamp(5rem, 3.25rem + 5vw, 8rem);
+  transition:
+    width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-title {
+  font-size: clamp(2.25rem, 1.35rem + 3.2vw, 3.25rem);
 }
 
 .hero-stage .hero-lede {
@@ -234,110 +382,19 @@ body {
 }
 
 .hero-stage .anim-hero-cta {
+  margin-top: clamp(2rem, 1.5rem + 1.5vw, 2.5rem);
   justify-content: flex-start;
+  transition: margin-top 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/*
- * Progressive scrim: as the viewport shrinks, raise the dark floor so hero
- * copy stays readable over the busy memories screenshot (esp. phones).
- */
-@media (max-width: 1023px) {
-  .hero-scrim {
-    background:
-      linear-gradient(
-        to left,
-        oklch(0.12 0 0 / 0.98) 0%,
-        oklch(0.12 0 0 / 0.96) 28%,
-        oklch(0.12 0 0 / 0.88) 50%,
-        oklch(0.12 0 0 / 0.72) 72%,
-        oklch(0.12 0 0 / 0.78) 100%
-      ),
-      linear-gradient(
-        to bottom,
-        oklch(0.12 0 0 / 1) 0,
-        oklch(0.12 0 0 / 1) 11%,
-        oklch(0.12 0 0 / 0.9) 14%,
-        oklch(0.12 0 0 / 0.45) 18%,
-        transparent 26%,
-        transparent 68%,
-        oklch(0.12 0 0 / 0.9) 100%
-      );
-  }
-
-  .hero-scrim::before {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    mask-image: linear-gradient(
-      to left,
-      black 0%,
-      rgb(0 0 0 / 0.95) 30%,
-      rgb(0 0 0 / 0.7) 55%,
-      rgb(0 0 0 / 0.4) 80%,
-      rgb(0 0 0 / 0.25) 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to left,
-      black 0%,
-      rgb(0 0 0 / 0.95) 30%,
-      rgb(0 0 0 / 0.7) 55%,
-      rgb(0 0 0 / 0.4) 80%,
-      rgb(0 0 0 / 0.25) 100%
-    );
-  }
-}
-
-@media (max-width: 639px) {
-  .hero-stage {
-    padding-bottom: 4.5rem;
-  }
-
-  .hero-scrim {
-    background:
-      /* Near-opaque wash — phone copy must not fight the memories table */
-      linear-gradient(
-        to left,
-        oklch(0.12 0 0 / 0.98) 0%,
-        oklch(0.12 0 0 / 0.97) 40%,
-        oklch(0.12 0 0 / 0.95) 70%,
-        oklch(0.12 0 0 / 0.93) 100%
-      ),
-      /* Extra bottom weight where the mark + headline sit */
-      linear-gradient(
-        to top,
-        oklch(0.12 0 0 / 0.85) 0%,
-        oklch(0.12 0 0 / 0.5) 30%,
-        oklch(0.12 0 0 / 0.18) 50%,
-        transparent 65%
-      ),
-      linear-gradient(
-        to bottom,
-        oklch(0.12 0 0 / 1) 0,
-        oklch(0.12 0 0 / 1) 11%,
-        oklch(0.12 0 0 / 0.92) 14%,
-        oklch(0.12 0 0 / 0.5) 18%,
-        transparent 26%,
-        transparent 68%,
-        oklch(0.12 0 0 / 0.92) 100%
-      );
-  }
-
-  .hero-scrim::before {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    mask-image: linear-gradient(
-      to left,
-      black 0%,
-      rgb(0 0 0 / 0.97) 45%,
-      rgb(0 0 0 / 0.85) 75%,
-      rgb(0 0 0 / 0.7) 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to left,
-      black 0%,
-      rgb(0 0 0 / 0.97) 45%,
-      rgb(0 0 0 / 0.85) 75%,
-      rgb(0 0 0 / 0.7) 100%
-    );
+@media (prefers-reduced-motion: reduce) {
+  .hero-scrim-layer,
+  .hero-nav,
+  .hero-stage,
+  .hero-stage .anim-hero-copy,
+  .hero-mark,
+  .hero-stage .anim-hero-cta {
+    transition: none;
   }
 }
 

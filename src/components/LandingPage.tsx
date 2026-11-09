@@ -56,7 +56,11 @@ export function LandingPage() {
               decoding="async"
               fetchPriority="high"
             />
-            <div className="hero-scrim" />
+            <div className="hero-scrim" aria-hidden="true">
+              <div className="hero-scrim-layer hero-scrim-layer--desktop" />
+              <div className="hero-scrim-layer hero-scrim-layer--tablet" />
+              <div className="hero-scrim-layer hero-scrim-layer--phone" />
+            </div>
           </div>
 
           <nav className="hero-nav flex items-center justify-between py-5">
@@ -95,23 +99,23 @@ export function LandingPage() {
             </div>
           </nav>
 
-          <div className="hero-stage site-shell flex min-h-[calc(100vh-4.5rem)] flex-col justify-center pb-16 pt-8 sm:pb-24">
-            <div className="anim-hero-copy flex w-[78%] max-w-[22rem] flex-col items-start gap-5 sm:w-full sm:max-w-md sm:gap-6 md:max-w-xl lg:max-w-3xl lg:flex-row lg:items-center lg:gap-8">
+          <div className="hero-stage site-shell flex min-h-[calc(100vh-4.5rem)] flex-col justify-center pt-8">
+            <div className="anim-hero-copy flex flex-col items-start lg:flex-row lg:items-center">
               <div className="anim-mark shrink-0">
-                <Mark className="h-20 w-20 drop-shadow-[0_12px_40px_oklch(0_0_0_/_0.55)] sm:h-24 sm:w-24 lg:h-32 lg:w-32" />
+                <Mark className="hero-mark drop-shadow-[0_12px_40px_oklch(0_0_0_/_0.55)]" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="mb-3 text-sm font-medium tracking-[0.14em] text-faint uppercase">
                   memchentic
                 </p>
-                <h1 className="font-display text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl md:text-[3.25rem]">
+                <h1 className="hero-title font-display leading-[1.1] font-semibold tracking-tight text-balance">
                   Memory that sticks with your agents
                 </h1>
                 <p className="hero-lede mt-5 max-w-md text-lg leading-relaxed text-muted text-pretty">
                   Across sessions, tools, and people — so agents stop
                   rediscovering what you already taught them.
                 </p>
-                <div className="anim-hero-cta mt-8 flex flex-wrap gap-3 sm:mt-10">
+                <div className="anim-hero-cta flex flex-wrap gap-3">
                   <a
                     className="btn-primary"
                     href={LINKS.github}
