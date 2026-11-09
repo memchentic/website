@@ -199,8 +199,8 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   mask-image: linear-gradient(
     to left,
     black 0%,
@@ -243,8 +243,8 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   mask-image: linear-gradient(
     to left,
     black 0%,
@@ -295,8 +295,8 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   mask-image: linear-gradient(
     to left,
     black 0%,
