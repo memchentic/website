@@ -153,6 +153,9 @@ body {
   /* 16:9 source — bias left + slightly down so table fills under the top blackout */
   object-fit: cover;
   object-position: left 28%;
+  /* Soften the memories table so hero copy is not text-on-text; scale hides blur edges */
+  transform: scale(1.08);
+  filter: blur(14px);
 }
 
 /*
