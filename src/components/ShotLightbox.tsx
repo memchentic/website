@@ -1,4 +1,11 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 
 type ShotLightboxProps = {
   src: string;
@@ -8,8 +15,11 @@ type ShotLightboxProps = {
   className?: string;
 };
 
+const SECTION_OPEN_CLASS = "band--lightbox-open";
+
 /**
  * Product screenshot that opens a large modal on click / Enter / Space.
+ * The overlay is portaled into the nearest `.reveal` / `.band` section.
  */
 export function ShotLightbox({
   src,
@@ -19,10 +29,23 @@ export function ShotLightbox({
   className = "",
 }: ShotLightboxProps) {
   const [open, setOpen] = useState(false);
+  const [sectionEl, setSectionEl] = useState<HTMLElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
 
   useEffect(() => {
-    if (!open) {
+    const trigger = triggerRef.current;
+    if (!trigger) {
+      return;
+    }
+    const section =
+      trigger.closest<HTMLElement>(".reveal") ??
+      trigger.closest<HTMLElement>(".band");
+    setSectionEl(section);
+  }, []);
+
+  useEffect(() => {
+    if (!open || !sectionEl) {
       return;
     }
     const onKey = (e: KeyboardEvent) => {
@@ -30,18 +53,59 @@ export function ShotLightbox({
         setOpen(false);
       }
     };
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    sectionEl.classList.add(SECTION_OPEN_CLASS);
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prev;
+      sectionEl.classList.remove(SECTION_OPEN_CLASS);
       window.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, sectionEl]);
+
+  const backdrop =
+    open && sectionEl
+      ? createPortal(
+          <div
+            className="shot-lightbox-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            onClick={() => setOpen(false)}
+          >
+            <div
+              className="shot-lightbox-panel"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="shot-lightbox-bar">
+                <p id={titleId} className="shot-lightbox-title">
+                  {alt}
+                </p>
+                <button
+                  type="button"
+                  className="shot-lightbox-close"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close enlarged screenshot"
+                >
+                  Close
+                </button>
+              </div>
+              <img
+                src={src}
+                alt=""
+                className="shot-lightbox-full"
+                width={width}
+                height={height}
+                decoding="async"
+              />
+            </div>
+          </div>,
+          sectionEl,
+        )
+      : null;
 
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         className={`shot-lightbox-trigger ${className}`.trim()}
         onClick={() => setOpen(true)}
@@ -60,42 +124,7 @@ export function ShotLightbox({
           Click to enlarge
         </span>
       </button>
-      {open ? (
-        <div
-          className="shot-lightbox-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="shot-lightbox-panel"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="shot-lightbox-bar">
-              <p id={titleId} className="shot-lightbox-title">
-                {alt}
-              </p>
-              <button
-                type="button"
-                className="shot-lightbox-close"
-                onClick={() => setOpen(false)}
-                aria-label="Close enlarged screenshot"
-              >
-                Close
-              </button>
-            </div>
-            <img
-              src={src}
-              alt=""
-              className="shot-lightbox-full"
-              width={width}
-              height={height}
-              decoding="async"
-            />
-          </div>
-        </div>
-      ) : null}
+      {backdrop}
     </>
   );
 }

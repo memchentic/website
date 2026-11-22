@@ -220,7 +220,7 @@ export function LandingPage() {
                 src={`${import.meta.env.BASE_URL}screenshots/memories.png`}
                 alt="Memchentic Memories page listing typed entries and guides"
                 width={1440}
-                height={1100}
+                height={1200}
               />
             </ShotFigure>
           </div>
