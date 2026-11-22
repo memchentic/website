@@ -1227,8 +1227,8 @@ def capture_screenshots(login_email: str, login_password: str) -> None:
         raise
 
     SHOT_DIR.mkdir(parents=True, exist_ok=True)
-    # Tall viewport so Memories/Metrics shots fill the pitch-site side column.
-    viewport = {"width": 1440, "height": 1200}
+    # 16:10 viewport matches pitch-site side-column frames (no side crop).
+    viewport = {"width": 1440, "height": 900}
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)

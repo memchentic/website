@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 type ShotLightboxProps = {
@@ -15,11 +9,8 @@ type ShotLightboxProps = {
   className?: string;
 };
 
-const SECTION_OPEN_CLASS = "band--lightbox-open";
-
 /**
- * Product screenshot that opens a large modal on click / Enter / Space.
- * The overlay is portaled into the nearest `.reveal` / `.band` section.
+ * Product screenshot that opens a viewport-centered lightbox on click.
  */
 export function ShotLightbox({
   src,
@@ -29,23 +20,9 @@ export function ShotLightbox({
   className = "",
 }: ShotLightboxProps) {
   const [open, setOpen] = useState(false);
-  const [sectionEl, setSectionEl] = useState<HTMLElement | null>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const titleId = useId();
 
   useEffect(() => {
-    const trigger = triggerRef.current;
-    if (!trigger) {
-      return;
-    }
-    const section =
-      trigger.closest<HTMLElement>(".reveal") ??
-      trigger.closest<HTMLElement>(".band");
-    setSectionEl(section);
-  }, []);
-
-  useEffect(() => {
-    if (!open || !sectionEl) {
+    if (!open) {
       return;
     }
     const onKey = (e: KeyboardEvent) => {
@@ -53,41 +30,37 @@ export function ShotLightbox({
         setOpen(false);
       }
     };
-    sectionEl.classList.add(SECTION_OPEN_CLASS);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
     return () => {
-      sectionEl.classList.remove(SECTION_OPEN_CLASS);
+      document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, sectionEl]);
+  }, [open]);
 
   const backdrop =
-    open && sectionEl
+    open && typeof document !== "undefined"
       ? createPortal(
           <div
             className="shot-lightbox-backdrop"
             role="dialog"
             aria-modal="true"
-            aria-labelledby={titleId}
+            aria-label={alt}
             onClick={() => setOpen(false)}
           >
             <div
               className="shot-lightbox-panel"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="shot-lightbox-bar">
-                <p id={titleId} className="shot-lightbox-title">
-                  {alt}
-                </p>
-                <button
-                  type="button"
-                  className="shot-lightbox-close"
-                  onClick={() => setOpen(false)}
-                  aria-label="Close enlarged screenshot"
-                >
-                  Close
-                </button>
-              </div>
+              <button
+                type="button"
+                className="shot-lightbox-close"
+                onClick={() => setOpen(false)}
+                aria-label="Close enlarged screenshot"
+              >
+                ×
+              </button>
               <img
                 src={src}
                 alt=""
@@ -98,14 +71,13 @@ export function ShotLightbox({
               />
             </div>
           </div>,
-          sectionEl,
+          document.body,
         )
       : null;
 
   return (
     <>
       <button
-        ref={triggerRef}
         type="button"
         className={`shot-lightbox-trigger ${className}`.trim()}
         onClick={() => setOpen(true)}
