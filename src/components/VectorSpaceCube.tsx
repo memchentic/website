@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  DEMO_MEMORIES,
   MEMORY_KINDS,
-  buildVectorCloud,
   type MemoryKind,
   type VectorPoint,
 } from "../data/showcase";
@@ -17,7 +17,7 @@ type Props = {
 export function VectorSpaceCube({ className = "" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const points = useMemo(() => buildVectorCloud(), []);
+  const points = DEMO_MEMORIES;
 
   const [yaw, setYaw] = useState(0.55);
   const [pitch, setPitch] = useState(0.35);
@@ -48,7 +48,8 @@ export function VectorSpaceCube({ className = "" }: Props) {
     yaw: number;
     pitch: number;
   } | null>(null);
-  const auto = useRef(true);
+  const [playing, setPlaying] = useState(true);
+  const playingRef = useRef(true);
   const angles = useRef({ yaw: 0.55, pitch: 0.35 });
   const projected = useRef<
     { p: VectorPoint; sx: number; sy: number; depth: number; r: number }[]
@@ -57,6 +58,10 @@ export function VectorSpaceCube({ className = "" }: Props) {
   useEffect(() => {
     angles.current = { yaw, pitch };
   }, [yaw, pitch]);
+
+  useEffect(() => {
+    playingRef.current = playing;
+  }, [playing]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -186,7 +191,7 @@ export function VectorSpaceCube({ className = "" }: Props) {
   useEffect(() => {
     let raf = 0;
     const tick = () => {
-      if (auto.current && !drag.current?.active) {
+      if (playingRef.current && !drag.current?.active) {
         angles.current.yaw += 0.004;
         setYaw(angles.current.yaw);
       }
@@ -225,10 +230,30 @@ export function VectorSpaceCube({ className = "" }: Props) {
     <div className={`vector-cube ${className}`.trim()} ref={wrapRef}>
       <div className="vector-cube-chrome">
         <span className="vector-cube-k">pgvector space</span>
-        <span className="vector-cube-hint">
-          {visibleCount.toLocaleString()} memories · drag to rotate · click a
-          point
-        </span>
+        <div className="vector-cube-chrome-end">
+          <span className="vector-cube-hint">
+            {visibleCount.toLocaleString()} memories · drag to rotate
+          </span>
+          <button
+            type="button"
+            className="vector-cube-play"
+            aria-pressed={playing}
+            aria-label={playing ? "Pause rotation" : "Play rotation"}
+            title={playing ? "Pause" : "Play"}
+            onClick={() => setPlaying((p) => !p)}
+          >
+            {playing ? (
+              <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                <rect x="3" y="2" width="3.5" height="12" fill="currentColor" />
+                <rect x="9.5" y="2" width="3.5" height="12" fill="currentColor" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                <path d="M4 2.5v11l10-5.5L4 2.5z" fill="currentColor" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
       <canvas
         ref={canvasRef}
@@ -236,7 +261,6 @@ export function VectorSpaceCube({ className = "" }: Props) {
         role="img"
         aria-label="Interactive 3D cube of memory embeddings clustered by kind. Drag to rotate."
         onPointerDown={(e) => {
-          auto.current = false;
           drag.current = {
             active: true,
             x: e.clientX,
@@ -261,16 +285,7 @@ export function VectorSpaceCube({ className = "" }: Props) {
           setYaw(nextYaw);
           setPitch(nextPitch);
         }}
-        onPointerUp={(e) => {
-          if (drag.current?.active) {
-            const dx = Math.abs(e.clientX - drag.current.x);
-            const dy = Math.abs(e.clientY - drag.current.y);
-            if (dx < 4 && dy < 4) {
-              const hit = hitTest(e.clientX, e.clientY);
-              if (hit) {
-              }
-            }
-          }
+        onPointerUp={() => {
           drag.current = null;
         }}
         onPointerLeave={() => {
