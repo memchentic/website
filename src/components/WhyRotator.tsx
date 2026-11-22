@@ -39,7 +39,7 @@ const ITEMS = [
   {
     idx: "08",
     title: "Export & ingest",
-    body: "Bounded full-row export; suggest memories from prose, then confirm before write.",
+    body: "Bounded export; propose from prose, optional LLM extract, optional decision-model score, then confirm.",
   },
   {
     idx: "09",

@@ -112,7 +112,7 @@ const SCRIPT: Beat[] = [
   "text": "Shift handoff: three dup-charge tickets… finance says retry batch stuck…"
 }`,
     status: "done · 88ms",
-    meta: "2 candidates",
+    meta: "2 candidates · kind scored",
     lines: [
       {
         title: "decision · Retry batch paused",
