@@ -219,8 +219,8 @@ export function LandingPage() {
               <ShotLightbox
                 src={`${import.meta.env.BASE_URL}screenshots/memories.png`}
                 alt="Memchentic Memories page listing typed entries and guides"
-                width={1440}
-                height={900}
+                width={1200}
+                height={2050}
               />
             </ShotFigure>
           </div>
@@ -355,8 +355,8 @@ export function LandingPage() {
               <ShotLightbox
                 src={`${import.meta.env.BASE_URL}screenshots/metrics.png`}
                 alt="Memchentic Metrics page with colored charts for entries, guides, types, and spaces"
-                width={1440}
-                height={900}
+                width={1200}
+                height={2050}
               />
             </ShotFigure>
           </div>
