@@ -29,14 +29,14 @@ type AgentBeat = { kind: "agent"; at: number; text: string };
 type Beat = ToolBeat | AgentBeat;
 
 const PROMPT =
-  "Checkout retries are double-charging customers in Payments Core. Find the cause and fix it.";
+  "Repeat billing disputes are backing up in Tier-2. Draft the customer reply and update what the team should remember.";
 
 /** One 120s slice of a single long agent turn; replays back-to-back. */
 const SCRIPT: Beat[] = [
   {
     kind: "agent",
     at: 1,
-    text: "Checking memory before I touch the payment paths.",
+    text: "Checking shared memory before I draft the incident summary.",
   },
   {
     kind: "tool",
@@ -45,19 +45,19 @@ const SCRIPT: Beat[] = [
     server: "memchentic",
     name: "guide_find",
     args: `{
-  "query": "payments retry double charge idempotency",
+  "query": "billing dispute escalation credit policy",
   "limit": 8
 }`,
     status: "done · 42ms",
-    meta: "2 guides · shared",
+    meta: "2 guides · support",
     lines: [
       {
-        title: "When changing money paths, require idempotency",
-        text: "Keep Idempotency-Key semantics; no silent write retries.",
+        title: "When a dispute repeats within 30 days",
+        text: "Escalate to Tier-3; do not promise instant credits in chat.",
       },
       {
-        title: "Failed approach: shared Redis for ledger locks",
-        text: "Split-brain under partition — stay on Postgres advisory locks.",
+        title: "When finance flags a known outage",
+        text: "Use the approved macro; link the status page, not internal tickets.",
       },
     ],
   },
@@ -68,273 +68,135 @@ const SCRIPT: Beat[] = [
     server: "memchentic",
     name: "find",
     args: `{
-  "query": "double charge retry ledger",
+  "query": "duplicate charge retry window",
   "limit": 10
 }`,
     status: "done · 57ms",
-    meta: "3 entries · shared",
+    meta: "3 entries · support",
     lines: [
       {
-        title: "insight · Idempotency keys evicted after 24h",
-        text: "payments-core · services/payments/ledger/",
+        title: "fact · Retry window is 48h after first decline",
+        text: "ops/billing-playbooks",
       },
-      { title: "decision · Retries go through the queue worker", text: "payments-core" },
-      { title: "fact · Ledger writes are double-entry", text: "payments-core" },
+      {
+        title: "decision · Proactive credits need manager approval",
+        text: "support-escalations",
+      },
+      {
+        title: "insight · March outage still cited in macros",
+        text: "stale customer-facing wording",
+      },
     ],
   },
   {
     kind: "tool",
     at: 12,
-    runFor: 1.2,
+    runFor: 1.1,
     server: "memchentic",
-    name: "open",
+    name: "feedback",
+    write: true,
     args: `{
-  "id": "…idempotency-key-ttl…"
+  "id": "…march-outage-macro…",
+  "signal": "stale"
 }`,
-    status: "done · 18ms",
-    meta: "insight",
+    status: "recorded",
+    meta: "ranking nudge",
+  },
+  {
+    kind: "tool",
+    at: 16,
+    runFor: 1.5,
+    server: "memchentic",
+    name: "ingest_suggest",
+    args: `{
+  "text": "Shift handoff: three dup-charge tickets… finance says retry batch stuck…"
+}`,
+    status: "done · 88ms",
+    meta: "2 candidates",
     lines: [
       {
-        text: "Keys live in Postgres with a 24h TTL. A replay after eviction is treated as a brand-new charge.",
+        title: "decision · Retry batch paused",
+        text: "Finance halted auto-retries until duplicate detection is verified.",
+      },
+      {
+        title: "When duplicate charges cluster",
+        text: "Open Sev-2 with billing-oncall; do not close tickets individually.",
       },
     ],
   },
   {
     kind: "agent",
-    at: 16,
-    text: "Known risk: a replay after key eviction charges again. Checking what this path remembers.",
+    at: 21,
+    text: "Handoff matches memory: retries are paused, customers need the approved status wording — not last quarter's outage note.",
   },
   {
     kind: "tool",
-    at: 19,
-    runFor: 1.4,
-    server: "memchentic",
-    name: "about_path",
-    args: `{
-  "path": "services/payments/ledger/",
-  "repo_hint": "payments-core"
-}`,
-    status: "done · 31ms",
-    meta: "1 entry",
-    lines: [{ title: "insight · Idempotency keys evicted after 24h", text: "path_hint match" }],
-  },
-  {
-    kind: "tool",
-    at: 24,
-    runFor: 1.1,
-    server: "workspace",
-    name: "Grep",
-    args: `{
-  "pattern": "IDEMPOTENCY_TTL|max_backoff",
-  "path": "services/payments"
-}`,
-    status: "4 matches",
-    lines: [
-      { text: "ledger/writer.py:41  IDEMPOTENCY_TTL = timedelta(hours=24)" },
-      { text: "retry/worker.py:18   max_backoff = timedelta(hours=36)" },
-    ],
-  },
-  {
-    kind: "tool",
-    at: 28,
-    runFor: 0.9,
-    server: "workspace",
-    name: "Read",
-    args: `{
-  "path": "services/payments/retry/worker.py",
-  "lines": "12-64"
-}`,
-    status: "53 lines",
-  },
-  {
-    kind: "agent",
-    at: 32,
-    text: "Found it: the retry worker backs off up to 36h, but keys are evicted at 24h. Late retries slip past dedupe.",
-  },
-  {
-    kind: "tool",
-    at: 36,
-    runFor: 1.3,
-    server: "workspace",
-    name: "Edit",
-    args: `{
-  "path": "services/payments/ledger/writer.py",
-  "change": "TTL derives from max_backoff + 24h; reject replays past window"
-}`,
-    status: "+14 −3",
-  },
-  {
-    kind: "tool",
-    at: 41,
-    runFor: 4.5,
-    server: "workspace",
-    name: "Shell",
-    args: `pytest tests/payments -q`,
-    status: "exit 0",
-    lines: [{ text: "128 passed in 3.41s" }],
-  },
-  {
-    kind: "tool",
-    at: 49,
+    at: 25,
     runFor: 1.6,
     server: "memchentic",
     name: "remember",
     write: true,
     args: `{
-  "type": "insight",
-  "title": "Idempotency TTL must exceed max retry backoff",
-  "path_hint": "services/payments/ledger/",
+  "type": "decision",
+  "title": "Feb duplicate-charge cluster uses Sev-2 + status macro",
+  "tags": ["billing", "tier-2"],
   "visibility": "shared"
 }`,
     status: "saved",
   },
   {
     kind: "tool",
-    at: 54,
+    at: 30,
     runFor: 1.6,
     server: "memchentic",
     name: "guide_write",
     write: true,
     args: `{
-  "title": "When changing retry backoff, re-check idempotency TTL",
-  "when": "editing retry workers on money paths",
-  "do": "Derive key TTL from max_backoff; never hardcode it"
+  "title": "When duplicate charges spike in Tier-2",
+  "when": "more than two dup-charge tickets in 24h",
+  "do": "Sev-2 billing-oncall; single status macro — no per-ticket credits"
 }`,
     status: "upserted · confidence ↑",
   },
   {
-    kind: "agent",
-    at: 59,
-    text: "Payments is fixed and green. Checking whether other services copied the same pattern.",
+    kind: "tool",
+    at: 36,
+    runFor: 1.2,
+    server: "memchentic",
+    name: "history",
+    args: `{
+  "id": "…march-outage-macro…",
+  "limit": 5
+}`,
+    status: "done · 22ms",
+    meta: "2 revisions",
+    lines: [
+      { text: "revised_at · body now points customers to /status not March postmortem" },
+    ],
   },
   {
     kind: "tool",
-    at: 62,
+    at: 41,
     runFor: 1.4,
     server: "memchentic",
-    name: "guide_find",
+    name: "export",
     args: `{
-  "query": "retry backoff idempotency ttl",
-  "limit": 8
+  "space_scope": "group",
+  "tags": ["billing"],
+  "limit": 20
 }`,
-    status: "done · 39ms",
-    meta: "1 guide · shared",
-    lines: [
-      {
-        title: "When changing retry backoff, re-check idempotency TTL",
-        text: "Derive key TTL from max_backoff; never hardcode it.",
-      },
-    ],
-  },
-  {
-    kind: "tool",
-    at: 67,
-    runFor: 1.2,
-    server: "workspace",
-    name: "Grep",
-    args: `{
-  "pattern": "IDEMPOTENCY_TTL",
-  "path": "services"
-}`,
-    status: "3 matches",
-    lines: [
-      { text: "payments/ledger/writer.py:41" },
-      { text: "refunds/worker.py:27   IDEMPOTENCY_TTL = timedelta(hours=24)" },
-      { text: "payouts/batch.py:33    ttl derived from max_backoff" },
-    ],
-  },
-  {
-    kind: "tool",
-    at: 71,
-    runFor: 0.9,
-    server: "workspace",
-    name: "Read",
-    args: `{
-  "path": "services/refunds/worker.py",
-  "lines": "1-80"
-}`,
-    status: "80 lines",
+    status: "done · 71ms",
+    meta: "14 rows",
   },
   {
     kind: "agent",
-    at: 75,
-    text: "Refunds has the same gap: 48h backoff against a 24h key. Payouts already does it right.",
-  },
-  {
-    kind: "tool",
-    at: 79,
-    runFor: 1.2,
-    server: "workspace",
-    name: "Edit",
-    args: `{
-  "path": "services/refunds/worker.py",
-  "change": "derive IDEMPOTENCY_TTL from max_backoff"
-}`,
-    status: "+9 −2",
-  },
-  {
-    kind: "tool",
-    at: 83,
-    runFor: 4,
-    server: "workspace",
-    name: "Shell",
-    args: `pytest tests/refunds -q`,
-    status: "exit 0",
-    lines: [{ text: "41 passed in 1.87s" }],
-  },
-  {
-    kind: "tool",
-    at: 90,
-    runFor: 1.4,
-    server: "memchentic",
-    name: "revise",
-    write: true,
-    args: `{
-  "id": "…idempotency-ttl-backoff…",
-  "path_hint": "services/",
-  "body_append": "Also fixed in refunds; payouts already compliant."
-}`,
-    status: "revised",
-  },
-  {
-    kind: "tool",
-    at: 96,
-    runFor: 1.8,
-    server: "memchentic",
-    name: "overlap_report",
-    args: `{
-  "space": "shared"
-}`,
-    status: "done · 64ms",
-    meta: "1 pair · 0 conflicts",
-    lines: [
-      {
-        title: "Idempotency keys evicted after 24h",
-        text: "Superseded by the TTL ≥ backoff insight — merge suggested.",
-      },
-    ],
-  },
-  {
-    kind: "tool",
-    at: 102,
-    runFor: 1.3,
-    server: "memchentic",
-    name: "forget",
-    write: true,
-    args: `{
-  "id": "…idempotency-keys-evicted-24h…"
-}`,
-    status: "removed · merged",
+    at: 47,
+    text: "Customer reply drafted. Memory updated, stale macro flagged, and the next shift starts from the same facts.",
   },
   {
     kind: "agent",
-    at: 107,
-    text: "Both paths are patched, tests pass, and the stale entry is merged. The next agent starts from the corrected memory.",
-  },
-  {
-    kind: "agent",
-    at: 114,
-    text: "Sweeping the remaining money paths for the same retry pattern.",
+    at: 52,
+    text: "Webhook will fan the new decision to our internal agent runtime — no second paste into the ticket bot.",
   },
 ];
 

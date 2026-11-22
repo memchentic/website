@@ -154,14 +154,15 @@ export function LandingPage() {
               </h2>
               <div className="mt-8 space-y-5 text-base leading-relaxed text-muted">
                 <p>
-                  Coding agents lose the preferences you already explained, the
+                  Agents lose the preferences you already explained, the
                   decisions your team already made, and the hard-won lessons from
-                  last week&apos;s bug hunt.
+                  last week&apos;s incident or review — in support, ops, research,
+                  or code.
                 </p>
                 <p>
-                  Shared work makes it worse. One person&apos;s &ldquo;how we do
-                  auth here&rdquo; never reaches the next person&apos;s session —
-                  until something recalls it.
+                  Shared work makes it worse. One person&apos;s runbook or policy
+                  never reaches the next person&apos;s session — until something
+                  recalls it.
                 </p>
               </div>
             </div>
@@ -249,7 +250,50 @@ export function LandingPage() {
           </div>
         </Reveal>
 
-        <Reveal className="band band-alt" id="mcp">
+        <Reveal className="band band-alt" id="capabilities">
+          <div className="site-shell py-24">
+            <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
+              Beyond remember / find
+            </p>
+            <h2 className="max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+              Audit, portable export, and hooks for the rest of your stack.
+            </h2>
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
+              The same MCP surface agents already use — plus revision history,
+              usefulness feedback, bounded export, ingest suggestions from prose,
+              consolidation-aware hygiene, and HTTPS mutation webhooks for
+              downstream runtimes.
+            </p>
+            <ul className="mt-10 grid gap-4 text-base text-muted sm:grid-cols-2 lg:max-w-3xl">
+              <li>
+                <strong className="font-medium text-ink">History</strong> —
+                field-level revisions per memory
+              </li>
+              <li>
+                <strong className="font-medium text-ink">Feedback</strong> —
+                useful / stale / wrong signals that steer ranking
+              </li>
+              <li>
+                <strong className="font-medium text-ink">Export</strong> —
+                full rows you are allowed to read, capped for safety
+              </li>
+              <li>
+                <strong className="font-medium text-ink">Ingest suggest</strong>
+                — split notes into candidates, confirm before write
+              </li>
+              <li>
+                <strong className="font-medium text-ink">Hygiene</strong> —
+                conflicts, merges, consolidation proposals
+              </li>
+              <li>
+                <strong className="font-medium text-ink">Webhooks</strong> —
+                POST create/update/delete to your agent platform
+              </li>
+            </ul>
+          </div>
+        </Reveal>
+
+        <Reveal className="band" id="mcp">
           <div className="site-shell py-24">
             <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
               MCP-native
