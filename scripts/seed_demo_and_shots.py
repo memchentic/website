@@ -1227,8 +1227,8 @@ def capture_screenshots(login_email: str, login_password: str) -> None:
         raise
 
     SHOT_DIR.mkdir(parents=True, exist_ok=True)
-    # Landscape Admin viewport for pitch-site side column (cover, top-left).
-    viewport = {"width": 1440, "height": 900}
+    # Tall-skinny viewport matching pitch-site #metrics/.shot-frame (~0.585 w/h).
+    viewport = {"width": 1200, "height": 2050}
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
