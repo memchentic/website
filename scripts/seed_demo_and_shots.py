@@ -23,11 +23,15 @@ DOCKER_DIR = ROOT.parent / "docker"
 DOCKER_ENV = DOCKER_DIR / ".env"
 SHOT_DIR = ROOT / "public" / "screenshots"
 GUI = os.environ.get("MEMCHENTIC_GUI_URL", "http://127.0.0.1:18080")
-API = os.environ.get("MEMCHENTIC_API_URL", "http://127.0.0.1:18081")
+# Single published port serves GUI + /api in Compose; override if split.
+API = os.environ.get("MEMCHENTIC_API_URL", GUI)
 
 DEMO_PASSWORD = "NorthlineDemo1!"
 TARGET_TOTAL = int(os.environ.get("MEMCHENTIC_DEMO_TARGET", "2000"))
+TARGET_RECALLS = int(os.environ.get("MEMCHENTIC_DEMO_RECALLS", "5000"))
 CORPUS_TAG = "demo-corpus"
+RECALL_SOURCES = ("search", "open", "guide_find", "guide_write")
+RECALL_SOURCE_WEIGHTS = (0.55, 0.25, 0.15, 0.05)
 ENTRY_TYPES = [
     "fact",
     "preference",
@@ -161,6 +165,18 @@ GROUPS = [
     },
 ]
 
+# Projects live inside group spaces (not personal). Names are stable across re-seeds.
+PROJECTS = [
+    {"group": "Platform Engineering", "name": "Console Refresh"},
+    {"group": "Platform Engineering", "name": "GitOps Hardening"},
+    {"group": "Payments Core", "name": "Ledger v2"},
+    {"group": "Payments Core", "name": "Payout Idempotency"},
+    {"group": "Incident Response", "name": "Datastore Runbooks"},
+    {"group": "Incident Response", "name": "SEV Playbooks"},
+    {"group": "Agent Tooling", "name": "Memory Plugin"},
+    {"group": "Agent Tooling", "name": "Recall Hygiene"},
+]
+
 
 def load_env(path: Path) -> dict[str, str]:
     out: dict[str, str] = {}
@@ -267,6 +283,23 @@ def add_member(token: str, space_id: str, email: str) -> None:
     )
 
 
+def ensure_project(token: str, space_id: str, name: str) -> str:
+    """Return project id for ``name`` in ``space_id``, creating it when missing."""
+    listed = api_json("GET", f"/api/projects?space_id={space_id}", token=token)
+    assert isinstance(listed, list)
+    for row in listed:
+        if row.get("name") == name:
+            return str(row["id"])
+    created = api_json(
+        "POST",
+        "/api/projects",
+        token=token,
+        body={"space_id": space_id, "name": name},
+    )
+    assert isinstance(created, dict) and created.get("id")
+    return str(created["id"])
+
+
 def remember(
     token: str,
     *,
@@ -278,7 +311,9 @@ def remember(
     path_hint: str | None = None,
     repo_hint: str | None = None,
     expires_at: str | None = None,
-) -> None:
+    supersedes_id: str | None = None,
+) -> str | None:
+    """Create an entry; return its id (or None when the API reported exists)."""
     payload: dict = {
         "title": title,
         "body": body,
@@ -294,7 +329,12 @@ def remember(
         payload["repo_hint"] = repo_hint
     if expires_at:
         payload["expires_at"] = expires_at
-    api_json("POST", "/api/memories", token=token, body=payload)
+    if supersedes_id:
+        payload["supersedes_id"] = supersedes_id
+    row = api_json("POST", "/api/memories", token=token, body=payload)
+    if not isinstance(row, dict) or row.get("_exists"):
+        return None
+    return str(row["id"])
 
 
 def guide_write(
@@ -387,6 +427,7 @@ def fill_corpus(
     owner_ids: dict[str, str],
     group_ids: dict[str, str],
     personal_ids: dict[str, str],
+    project_ids_by_group: dict[str, list[str]],
     target: int,
 ) -> int:
     """Bulk-insert balanced demo rows via SQL so Metrics charts look full."""
@@ -417,6 +458,7 @@ def fill_corpus(
         is_guide = (i % 10) < 3  # ~30% guides
         stem, tag_hint, path = TOPIC_STEMS[i % len(TOPIC_STEMS)]
         # Space mix: ~18% personal, rest evenly across groups.
+        project_sql = "NULL"
         if (i % 17) == 0:
             space_id = personal_ids[email]
             group_label = "personal"
@@ -424,6 +466,10 @@ def fill_corpus(
             gname = group_names[i % len(group_names)]
             space_id = group_ids[gname]
             group_label = gname
+            # ~65% of group memories attach to a project in that group.
+            projects = project_ids_by_group.get(gname) or []
+            if projects and (i % 10) < 7:
+                project_sql = sql_quote(projects[i % len(projects)]) + "::uuid"
 
         # Keep demo marker in provenance only — do not pollute top-tags charts.
         tags = {tag_hint}
@@ -475,6 +521,7 @@ def fill_corpus(
                 [
                     "gen_random_uuid()",
                     sql_quote(space_id) + "::uuid",
+                    project_sql,
                     kind_sql,
                     type_sql,
                     sql_quote(title[:512]),
@@ -500,7 +547,7 @@ def fill_corpus(
         chunk = rows[start : start + batch]
         sql = (
             "INSERT INTO memories ("
-            "id, space_id, kind, entry_type, title, body, tags, path_hint, "
+            "id, space_id, project_id, kind, entry_type, title, body, tags, path_hint, "
             "repo_hint, expires_at, confidence, embedding, provenance, "
             "created_by_user_id, created_at, updated_at"
             ") VALUES\n"
@@ -512,19 +559,312 @@ def fill_corpus(
         if inserted % 600 == 0 or inserted == need:
             print(f"    …{inserted}/{need}")
 
-    # Soft-balance hero timestamps too so charts aren't a one-day cliff.
+    # Spread hero API rows (no demo_corpus flag) across the window without
+    # touching unrelated operator memories older than two days.
     psql(
-        f"""
+        """
         UPDATE memories
         SET created_at = now()
               - (((abs(hashtext(id::text)) % 80)::text || ' days')::interval)
               - (((abs(hashtext(title)) % 20)::text || ' hours')::interval),
             updated_at = created_at
-        WHERE NOT (provenance ? 'demo_corpus')
+        WHERE provenance ? 'demo_corpus' = false
+          AND title LIKE 'Northline%'
           AND created_at > now() - interval '2 days';
         """
     )
     return inserted
+
+
+def seed_recalls(*, owner_ids: dict[str, str], target: int) -> int:
+    """Insert ~90 days of memory_recalls for demo (and hero) memories."""
+    # Replace prior synthetic recall history for demo corpus only.
+    wiped = int(
+        psql(
+            "WITH d AS ("
+            "DELETE FROM memory_recalls r USING memories m "
+            "WHERE r.memory_id = m.id AND m.provenance ? 'demo_corpus' "
+            "RETURNING 1) SELECT count(*) FROM d;"
+        ).strip()
+        or "0"
+    )
+    if wiped:
+        print(f"  wiped prior demo recalls: {wiped}")
+
+    catalog = psql(
+        "SELECT m.id::text, m.space_id::text, m.created_at::text, "
+        "m.created_by_user_id::text, m.kind::text "
+        "FROM memories m "
+        "WHERE m.provenance ? 'demo_corpus' "
+        "   OR m.title LIKE 'Northline%' "
+        "   OR m.title LIKE 'When %' "
+        "ORDER BY m.created_at;"
+    ).strip()
+    if not catalog:
+        print("  no memories available for recall seeding")
+        return 0
+
+    memories: list[tuple[str, str, datetime, str, str]] = []
+    for line in catalog.splitlines():
+        parts = line.split("\t")
+        if len(parts) < 5:
+            continue
+        mid, sid, created_raw, creator, kind = parts[:5]
+        created = datetime.fromisoformat(created_raw.replace(" ", "T"))
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=UTC)
+        memories.append((mid, sid, created, creator or "", kind))
+
+    print(f"  inserting ~{target} recalls across {len(memories)} memories…")
+    rng = random.Random(99)
+    now = datetime.now(UTC)
+    day_weights = [0.4 + 0.6 * (d / 89.0) for d in range(90)]
+    weight_sum = sum(day_weights)
+    user_ids = [uid for uid in owner_ids.values() if uid]
+    sources = list(RECALL_SOURCES)
+    source_weights = list(RECALL_SOURCE_WEIGHTS)
+
+    rows: list[str] = []
+    for i in range(target):
+        mid, sid, created, creator, kind = memories[i % len(memories)]
+        # Prefer recalls after the memory exists; clamp into the 90d window.
+        earliest = max(created, now - timedelta(days=89))
+        if earliest >= now:
+            recalled_at = now - timedelta(minutes=rng.randint(1, 180))
+        else:
+            pick = rng.random() * weight_sum
+            acc = 0.0
+            day = 89
+            for d, w in enumerate(day_weights):
+                acc += w
+                if pick <= acc:
+                    day = d
+                    break
+            candidate = now - timedelta(
+                days=89 - day, hours=rng.randint(0, 23), minutes=rng.randint(0, 59)
+            )
+            if candidate < earliest:
+                span = max(1, int((now - earliest).total_seconds()))
+                candidate = earliest + timedelta(seconds=rng.randint(0, span))
+            recalled_at = min(candidate, now)
+
+        if kind == "guide":
+            source = rng.choices(sources, weights=(0.2, 0.15, 0.45, 0.2), k=1)[0]
+        else:
+            source = rng.choices(sources, weights=source_weights, k=1)[0]
+        actor = creator if creator and rng.random() < 0.55 else rng.choice(user_ids)
+        actor_sql = sql_quote(actor) + "::uuid" if actor else "NULL"
+        rows.append(
+            "("
+            + ", ".join(
+                [
+                    "gen_random_uuid()",
+                    sql_quote(mid) + "::uuid",
+                    sql_quote(sid) + "::uuid",
+                    actor_sql,
+                    sql_quote(recalled_at.isoformat()),
+                    sql_quote(source),
+                ]
+            )
+            + ")"
+        )
+
+    batch = 250
+    inserted = 0
+    for start in range(0, len(rows), batch):
+        chunk = rows[start : start + batch]
+        sql = (
+            "INSERT INTO memory_recalls ("
+            "id, memory_id, space_id, recalled_by_user_id, recalled_at, source"
+            ") VALUES\n"
+            + ",\n".join(chunk)
+            + ";\n"
+        )
+        psql(sql)
+        inserted += len(chunk)
+        if inserted % 1000 == 0 or inserted == target:
+            print(f"    …{inserted}/{target}")
+
+    # Keep lifetime counters consistent with the synthetic event log.
+    psql(
+        """
+        UPDATE memories m
+        SET recall_count = COALESCE(s.cnt, 0),
+            last_recalled_at = s.last_at,
+            updated_at = m.updated_at
+        FROM (
+          SELECT memory_id, count(*)::int AS cnt, max(recalled_at) AS last_at
+          FROM memory_recalls
+          GROUP BY memory_id
+        ) s
+        WHERE m.id = s.memory_id
+          AND (m.provenance ? 'demo_corpus'
+               OR m.title LIKE 'Northline%'
+               OR m.title LIKE 'When %');
+        """
+    )
+    return inserted
+
+
+def seed_hygiene_samples(tokens: dict[str, str]) -> None:
+    """Seed declared supersedes conflicts and same-title near-duplicates for Hygiene."""
+    print("Writing hygiene conflict + near-dup samples…")
+    jordan = tokens["jordan.lee@northline.io"]
+    marcus = tokens["marcus.chen@northline.io"]
+    priya = tokens["priya.shah@northline.io"]
+
+    conflict_specs = [
+        {
+            "token": jordan,
+            "old_title": "Northline hygiene: Clearing writes Ledger tables (superseded)",
+            "old_body": (
+                "Clearing posts settlement adjustments directly into Ledger balances. "
+                "This was the early shortcut; it is wrong — use outbox events instead."
+            ),
+            "new_title": "Northline hygiene: Clearing never writes Ledger tables",
+            "new_body": (
+                "Ledger owns authoritative balances. Clearing must emit "
+                "ledger.settlement_requested via the outbox and never UPDATE Ledger "
+                "tables. Supersedes the early shortcut that wrote settlement state "
+                "inline."
+            ),
+            "type_": "decision",
+            "tags": ["architecture", "payments", "hygiene"],
+            "group": "Payments Core",
+            "path_hint": "services/clearing",
+            "repo_hint": "northline/platform",
+        },
+        {
+            "token": marcus,
+            "old_title": "Northline hygiene: Helm hooks for chart migrations (superseded)",
+            "old_body": (
+                "Use Helm pre-install hooks to run schema migrations before the "
+                "Deployment rolls. This fights Argo prune behavior."
+            ),
+            "new_title": "Northline hygiene: Prefer Argo sync waves for migrations",
+            "new_body": (
+                "Platform chart migrations use sync-wave annotations, not Helm "
+                "pre-install hooks. Hooks fight Argo's prune behavior. Documented "
+                "in platform-charts README."
+            ),
+            "type_": "decision",
+            "tags": ["gitops", "argo", "hygiene"],
+            "group": "Platform Engineering",
+            "path_hint": "charts/platform",
+            "repo_hint": "northline/platform-charts",
+        },
+        {
+            "token": priya,
+            "old_title": "Northline hygiene: Retry ledger writes on deadline (superseded)",
+            "old_body": (
+                "Client libraries may retry PostEntry on DEADLINE_EXCEEDED with the "
+                "same request. That duplicated postings under load."
+            ),
+            "new_title": "Northline hygiene: Never retry ledger writes without a new key",
+            "new_body": (
+                "ledger.PostEntry writes are not retried without a new idempotency "
+                "key. Only UNAVAILABLE/DEADLINE_EXCEEDED reads may retry with jitter."
+            ),
+            "type_": "instruction",
+            "tags": ["grpc", "ledger", "hygiene"],
+            "group": "Platform Engineering",
+            "path_hint": "services/ledger",
+            "repo_hint": "northline/platform",
+        },
+    ]
+    for spec in conflict_specs:
+        new_title = str(spec["new_title"])
+        if title_exists(new_title):
+            print(f"  conflict already present: {new_title}")
+            continue
+        old_id = remember(
+            str(spec["token"]),
+            title=str(spec["old_title"]),
+            body=str(spec["old_body"]),
+            type_=str(spec["type_"]),
+            tags=list(spec["tags"]),  # type: ignore[arg-type]
+            group=str(spec["group"]),
+            path_hint=str(spec["path_hint"]),
+            repo_hint=str(spec["repo_hint"]),
+        )
+        if not old_id:
+            raise RuntimeError(f"failed to create superseded row for {new_title}")
+        new_id = remember(
+            str(spec["token"]),
+            title=new_title,
+            body=str(spec["new_body"]),
+            type_=str(spec["type_"]),
+            tags=list(spec["tags"]),  # type: ignore[arg-type]
+            group=str(spec["group"]),
+            path_hint=str(spec["path_hint"]),
+            repo_hint=str(spec["repo_hint"]),
+            supersedes_id=old_id,
+        )
+        if not new_id:
+            raise RuntimeError(f"failed to create replacement for {new_title}")
+        print(f"  conflict: {new_title} supersedes {old_id[:8]}…")
+
+    near_dup_specs = [
+        {
+            "token": jordan,
+            "title": "Northline hygiene: Redis lock TTL for ledger",
+            "bodies": (
+                (
+                    "Ledger advisory locks use a 30s Redis TTL with auto-extend while "
+                    "the posting transaction is open."
+                ),
+                (
+                    "Ledger advisory locks use a thirty-second Redis TTL and extend "
+                    "while the posting transaction remains open."
+                ),
+            ),
+            "type_": "fact",
+            "tags": ["ledger", "locking", "hygiene"],
+            "group": "Payments Core",
+            "path_hint": "services/ledger",
+            "repo_hint": "northline/platform",
+        },
+        {
+            "token": marcus,
+            "title": "Northline hygiene: NAT idle timeout for clearing SFTP",
+            "bodies": (
+                (
+                    "Egress NAT idle timeout for clearing SFTP must stay at 350s so "
+                    "long uploads are not cut mid-file."
+                ),
+                (
+                    "Keep the clearing SFTP egress NAT idle timeout at 350 seconds so "
+                    "partner uploads are not dropped mid-transfer."
+                ),
+            ),
+            "type_": "fact",
+            "tags": ["networking", "clearing", "hygiene"],
+            "group": "Incident Response",
+            "path_hint": "ops/incidents",
+            "repo_hint": "northline/runbooks",
+        },
+    ]
+    for spec in near_dup_specs:
+        title = str(spec["title"])
+        if title_exists(title):
+            print(f"  near-dup already present: {title}")
+            continue
+        bodies = spec["bodies"]
+        assert isinstance(bodies, tuple) and len(bodies) == 2
+        for body in bodies:
+            mid = remember(
+                str(spec["token"]),
+                title=title,
+                body=str(body),
+                type_=str(spec["type_"]),
+                tags=list(spec["tags"]),  # type: ignore[arg-type]
+                group=str(spec["group"]),
+                path_hint=str(spec["path_hint"]),
+                repo_hint=str(spec["repo_hint"]),
+            )
+            if not mid:
+                raise RuntimeError(f"failed to create near-dup row for {title}")
+        print(f"  near-dup pair: {title}")
 
 
 def seed(admin_token: str) -> None:
@@ -555,6 +895,17 @@ def seed(admin_token: str) -> None:
             f"  {group['name']} owner={owner_email.split('@')[0]} "
             f"members={len(group['members'])}"
         )
+
+    print("Ensuring projects…")
+    project_ids_by_group: dict[str, list[str]] = {g["name"]: [] for g in GROUPS}
+    for project in PROJECTS:
+        gname = str(project["group"])
+        owner_email = next(g["owner"] for g in GROUPS if g["name"] == gname)
+        pid = ensure_project(
+            tokens[str(owner_email)], group_ids[gname], str(project["name"])
+        )
+        project_ids_by_group[gname].append(pid)
+        print(f"  {gname} / {project['name']} ok")
 
     print("Writing hero memories + guides…")
     heroes: list[tuple] = [
@@ -828,6 +1179,8 @@ def seed(admin_token: str) -> None:
             continue
         fn(**kwargs)  # type: ignore[misc]
 
+    seed_hygiene_samples(tokens)
+
     print("Filling balanced corpus…")
     personal_ids = personal_space_ids(tokens)
     added = fill_corpus(
@@ -835,10 +1188,17 @@ def seed(admin_token: str) -> None:
         owner_ids=owner_ids,
         group_ids=group_ids,
         personal_ids=personal_ids,
+        project_ids_by_group=project_ids_by_group,
         target=TARGET_TOTAL,
     )
+    print("Seeding 90-day recall timeline…")
+    recalls = seed_recalls(owner_ids=owner_ids, target=TARGET_RECALLS)
     total = memory_count()
-    print(f"Seed complete. corpus_added={added} total_memories={total}")
+    recall_total = int(psql("SELECT count(*) FROM memory_recalls;").strip() or "0")
+    print(
+        f"Seed complete. corpus_added={added} total_memories={total} "
+        f"recalls_added={recalls} total_recalls={recall_total}"
+    )
 
 
 def ensure_shots_interpreter() -> None:

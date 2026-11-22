@@ -208,8 +208,19 @@ export function LandingPage() {
               they need it — so context stays useful instead of drowning the
               chat. Hover a kind.
             </p>
-            <div className="mt-16 sm:mt-20">
+            <div className="mt-16 grid items-start gap-10 sm:mt-20 lg:grid-cols-2 lg:gap-14">
               <KindConstellation />
+              <figure className="metrics-shot-frame m-0">
+                <img
+                  src={`${import.meta.env.BASE_URL}screenshots/memories.png`}
+                  alt="Memchentic Memories page listing typed entries and guides"
+                  className="metrics-shot"
+                  width={1440}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </figure>
             </div>
           </div>
         </Reveal>
