@@ -2125,18 +2125,133 @@ body {
   text-align: right;
 }
 
-.metrics-shot-frame {
-  margin-top: 1.75rem;
+.shot-frame {
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   overflow: hidden;
+  min-height: 18rem;
 }
 
-.metrics-shot {
+.shot-frame--fill {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 28rem;
+}
+
+.shot-lightbox-trigger {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  text-align: left;
+  color: inherit;
+}
+
+.shot-frame--fill .shot-lightbox-trigger {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.shot-lightbox-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  vertical-align: top;
+}
+
+.shot-lightbox-hint {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.shot-lightbox-trigger:hover .shot-lightbox-hint,
+.shot-lightbox-trigger:focus-visible .shot-lightbox-hint {
+  opacity: 1;
+}
+
+.shot-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: color-mix(in oklab, oklch(0 0 0) 72%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.shot-lightbox-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(1120px, 100%);
+  max-height: min(92vh, 100%);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+  box-shadow: 0 24px 80px oklch(0 0 0 / 0.55);
+}
+
+.shot-lightbox-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.shot-lightbox-title {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  text-wrap: pretty;
+}
+
+.shot-lightbox-close {
+  appearance: none;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
+.shot-lightbox-close:hover {
+  background: var(--color-surface-2);
+}
+
+.shot-lightbox-full {
   display: block;
   width: 100%;
   height: auto;
-  vertical-align: top;
+  max-height: calc(92vh - 3.5rem);
+  object-fit: contain;
+  background: var(--color-surface);
 }
 
 /* Closing CTA band */

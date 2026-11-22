@@ -1214,13 +1214,7 @@ def ensure_shots_interpreter() -> None:
     )
 
 
-def capture_screenshots(
-    login_email: str,
-    login_password: str,
-    *,
-    metrics_email: str | None = None,
-    metrics_password: str | None = None,
-) -> None:
+def capture_screenshots(login_email: str, login_password: str) -> None:
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
@@ -1233,7 +1227,8 @@ def capture_screenshots(
         raise
 
     SHOT_DIR.mkdir(parents=True, exist_ok=True)
-    viewport = {"width": 1440, "height": 900}
+    # Tall viewport so Memories/Metrics shots fill the pitch-site side column.
+    viewport = {"width": 1440, "height": 1200}
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -1276,7 +1271,7 @@ def capture_screenshots(
 
         page.locator("table tbody tr", has_text="Platform Engineering").first.click()
         page.wait_for_url("**/groups/**", timeout=30000)
-        # Owned group: Rename + Delete (trash); remove-member trash on roster.
+        # Owned group: Rename + Delete; admin can manage demo groups.
         page.locator("button[aria-label='Delete']").wait_for(timeout=10000)
         page.locator("button[aria-label='Remove']").first.wait_for(timeout=10000)
         page.wait_for_timeout(1200)
@@ -1291,22 +1286,16 @@ def capture_screenshots(
         page.screenshot(path=str(SHOT_DIR / "memory-detail.png"), full_page=False)
         print(f"Wrote {SHOT_DIR / 'memory-detail.png'}")
 
-        # Metrics — prefer admin so the shot shows the full corpus pulse.
-        m_email = metrics_email or login_email
-        m_password = metrics_password or login_password
-        if (m_email, m_password) != (login_email, login_password):
-            context.clear_cookies()
-            page.goto(f"{GUI}/sign-in", wait_until="domcontentloaded")
-            page.wait_for_selector('input[type="email"]', timeout=30000)
-            page.fill('input[type="email"]', m_email)
-            page.fill('input[type="password"]', m_password)
-            page.click('button[type="submit"]')
-            page.wait_for_url(lambda url: "/sign-in" not in url, timeout=30000)
-            page.wait_for_timeout(800)
+        # Metrics as the same admin session (full corpus pulse).
         page.goto(f"{GUI}/metrics", wait_until="domcontentloaded")
         page.get_by_role("heading", name="Metrics").wait_for(timeout=30000)
         page.locator(".metrics-kpi-value").first.wait_for(timeout=30000)
         page.locator(".recharts-responsive-container").first.wait_for(timeout=30000)
+        # Prefer the 90d window so charts fill the tall frame.
+        ninety = page.get_by_role("button", name="90d")
+        if ninety.count():
+            ninety.first.click()
+            page.wait_for_timeout(1200)
         page.wait_for_timeout(1800)
         page.screenshot(path=str(SHOT_DIR / "metrics.png"), full_page=False)
         print(f"Wrote {SHOT_DIR / 'metrics.png'}")
@@ -1339,13 +1328,8 @@ def main() -> int:
         seed(admin_token)
         if seed_only:
             return 0
-    # Groups/detail as Platform Lead; Metrics as admin for the full corpus.
-    capture_screenshots(
-        "jordan.lee@northline.io",
-        DEMO_PASSWORD,
-        metrics_email=admin_email,
-        metrics_password=admin_password,
-    )
+    # Pitch-site shots (Memories, Metrics, …) as Admin for the full corpus.
+    capture_screenshots(admin_email, admin_password)
     return 0
 
 

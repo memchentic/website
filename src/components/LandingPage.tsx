@@ -7,6 +7,7 @@ import { KindConstellation } from "./KindConstellation";
 import { McpSessionDemo } from "./McpSessionDemo";
 import { ProblemTheater } from "./ProblemTheater";
 import { Reveal } from "./Reveal";
+import { ShotFigure, ShotLightbox } from "./ShotLightbox";
 import { VectorSpaceCube } from "./VectorSpaceCube";
 import { WhyRotator } from "./WhyRotator";
 
@@ -196,32 +197,31 @@ export function LandingPage() {
         </Reveal>
 
         <Reveal className="band band-alt" id="memory">
-          <div className="site-shell py-24">
-            <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
-              Memory model
-            </p>
-            <h2 className="max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Shaped the way people think — not one blob of text.
-            </h2>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
-              Agents get a short digest first, then open the full memory when
-              they need it — so context stays useful instead of drowning the
-              chat. Hover a kind.
-            </p>
-            <div className="mt-16 grid items-start gap-10 sm:mt-20 lg:grid-cols-2 lg:gap-14">
-              <KindConstellation />
-              <figure className="metrics-shot-frame m-0">
-                <img
-                  src={`${import.meta.env.BASE_URL}screenshots/memories.png`}
-                  alt="Memchentic Memories page listing typed entries and guides"
-                  className="metrics-shot"
-                  width={1440}
-                  height={900}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </figure>
+          <div className="site-shell grid items-stretch gap-10 py-24 lg:grid-cols-2 lg:gap-14">
+            <div className="flex min-h-0 flex-col">
+              <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
+                Memory model
+              </p>
+              <h2 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+                Shaped the way people think — not one blob of text.
+              </h2>
+              <p className="mt-6 text-base leading-relaxed text-muted">
+                Agents get a short digest first, then open the full memory when
+                they need it — so context stays useful instead of drowning the
+                chat. Hover a kind.
+              </p>
+              <div className="mt-10 grow sm:mt-12">
+                <KindConstellation />
+              </div>
             </div>
+            <ShotFigure className="shot-frame--fill">
+              <ShotLightbox
+                src={`${import.meta.env.BASE_URL}screenshots/memories.png`}
+                alt="Memchentic Memories page listing typed entries and guides"
+                width={1440}
+                height={1100}
+              />
+            </ShotFigure>
           </div>
         </Reveal>
 
@@ -287,33 +287,32 @@ export function LandingPage() {
         </Reveal>
 
         <Reveal className="band band-alt" id="metrics">
-          <div className="site-shell py-24">
-            <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
-              Corpus metrics
-            </p>
-            <h2 className="max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              See the shape of what your agents remember.
-            </h2>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
-              The console ships a Metrics view — totals, created-over-time,
-              entry types, spaces, tags, and creators — scoped by the same ACL
-              as every memory read. Operators get a pulse without paging the
-              whole corpus.
-            </p>
-            <div className="mt-16 grid items-start gap-10 sm:mt-20 lg:grid-cols-2 lg:gap-14">
-              <CorpusPulse />
-              <figure className="metrics-shot-frame m-0">
-                <img
-                  src={`${import.meta.env.BASE_URL}screenshots/metrics.png`}
-                  alt="Memchentic Metrics page with colored charts for entries, guides, types, and spaces"
-                  className="metrics-shot"
-                  width={1440}
-                  height={900}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </figure>
+          <div className="site-shell grid items-stretch gap-10 py-24 lg:grid-cols-2 lg:gap-14">
+            <div className="flex min-h-0 flex-col">
+              <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
+                Corpus metrics
+              </p>
+              <h2 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+                See the shape of what your agents remember.
+              </h2>
+              <p className="mt-6 text-base leading-relaxed text-muted">
+                The console ships a Metrics view — totals, created-over-time,
+                entry types, spaces, tags, and creators — scoped by the same ACL
+                as every memory read. Operators get a pulse without paging the
+                whole corpus.
+              </p>
+              <div className="mt-10 grow sm:mt-12">
+                <CorpusPulse />
+              </div>
             </div>
+            <ShotFigure className="shot-frame--fill">
+              <ShotLightbox
+                src={`${import.meta.env.BASE_URL}screenshots/metrics.png`}
+                alt="Memchentic Metrics page with colored charts for entries, guides, types, and spaces"
+                width={1440}
+                height={1200}
+              />
+            </ShotFigure>
           </div>
         </Reveal>
 
