@@ -804,6 +804,11 @@ body {
 /* —— Section bands & richer layouts —— */
 .band {
   position: relative;
+  isolation: isolate;
+}
+
+.band--lightbox-open {
+  overflow: hidden;
 }
 
 .band-alt {
@@ -2135,8 +2140,12 @@ body {
 .shot-frame--fill {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 28rem;
+  align-self: start;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  /* Match Admin capture viewport 1440×1200 (6:5). */
+  aspect-ratio: 6 / 5;
 }
 
 .shot-lightbox-trigger {
@@ -2189,7 +2198,7 @@ body {
 }
 
 .shot-lightbox-backdrop {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 80;
   display: flex;
@@ -2204,7 +2213,7 @@ body {
   display: flex;
   flex-direction: column;
   width: min(1120px, 100%);
-  max-height: min(92vh, 100%);
+  max-height: calc(100% - 2.5rem);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -2249,7 +2258,7 @@ body {
   display: block;
   width: 100%;
   height: auto;
-  max-height: calc(92vh - 3.5rem);
+  max-height: calc(100% - 3.5rem);
   object-fit: contain;
   background: var(--color-surface);
 }
