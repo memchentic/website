@@ -1227,7 +1227,7 @@ def capture_screenshots(login_email: str, login_password: str) -> None:
         raise
 
     SHOT_DIR.mkdir(parents=True, exist_ok=True)
-    # 16:10 viewport matches pitch-site side-column frames (no side crop).
+    # Landscape Admin viewport for pitch-site side column (cover, top-left).
     viewport = {"width": 1440, "height": 900}
 
     with sync_playwright() as p:
