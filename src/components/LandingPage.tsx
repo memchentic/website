@@ -260,9 +260,10 @@ export function LandingPage() {
             </h2>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
               The same MCP surface agents already use — plus revision history,
-              usefulness feedback, bounded export, ingest suggestions from prose,
-              consolidation-aware hygiene, and HTTPS mutation webhooks for
-              downstream runtimes.
+              usefulness feedback, bounded export, ingest suggestions from prose
+              (heuristics first, optional chat LLM extract, optional
+              decision-model gate), consolidation-aware hygiene, and HTTPS
+              mutation webhooks for downstream runtimes.
             </p>
             <ul className="mt-10 grid gap-4 text-base text-muted sm:grid-cols-2 lg:max-w-3xl">
               <li>
@@ -279,7 +280,8 @@ export function LandingPage() {
               </li>
               <li>
                 <strong className="font-medium text-ink">Ingest suggest</strong>
-                — split notes into candidates, confirm before write
+                — propose from prose, optional LLM extract, optional Jev/Kev
+                score, confirm before write
               </li>
               <li>
                 <strong className="font-medium text-ink">Hygiene</strong> —
