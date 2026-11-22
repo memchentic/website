@@ -31,6 +31,21 @@ const ITEMS = [
     title: "Corpus metrics",
     body: "See growth, types, spaces, and creators — ACL-scoped, without paging every memory.",
   },
+  {
+    idx: "07",
+    title: "Revision history",
+    body: "Field-level edits per memory — audit what changed, not just who touched it last.",
+  },
+  {
+    idx: "08",
+    title: "Export & ingest",
+    body: "Bounded full-row export; suggest memories from prose, then confirm before write.",
+  },
+  {
+    idx: "09",
+    title: "Hygiene & webhooks",
+    body: "Consolidation proposals, TTL overlap reports, and HTTPS hooks for your runtimes.",
+  },
 ] as const;
 
 /**
