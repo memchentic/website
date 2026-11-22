@@ -211,7 +211,7 @@ export function LandingPage() {
                 they need it — so context stays useful instead of drowning the
                 chat. Hover a kind.
               </p>
-              <div className="mt-10 grow sm:mt-12">
+              <div className="mt-10 flex min-h-0 flex-1 flex-col sm:mt-12">
                 <KindConstellation />
               </div>
             </div>
@@ -347,7 +347,7 @@ export function LandingPage() {
                 as every memory read. Operators get a pulse without paging the
                 whole corpus.
               </p>
-              <div className="mt-10 grow sm:mt-12">
+              <div className="mt-10 flex min-h-0 flex-1 flex-col sm:mt-12">
                 <CorpusPulse />
               </div>
             </div>
