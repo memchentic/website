@@ -18,6 +18,8 @@ const RANGE_KPIS: Record<
     expiring: number;
     spaces: number;
     accesses: number;
+    unique: number;
+    never: number;
   }
 > = {
   "7d": {
@@ -28,6 +30,8 @@ const RANGE_KPIS: Record<
     expiring: 36,
     spaces: 12,
     accesses: 890,
+    unique: 412,
+    never: 192,
   },
   "30d": {
     total: 2001,
@@ -37,6 +41,8 @@ const RANGE_KPIS: Record<
     expiring: 36,
     spaces: 12,
     accesses: 3100,
+    unique: 1204,
+    never: 192,
   },
   "90d": {
     total: 2001,
@@ -46,6 +52,8 @@ const RANGE_KPIS: Record<
     expiring: 36,
     spaces: 12,
     accesses: 5115,
+    unique: 1809,
+    never: 192,
   },
 };
 
@@ -56,6 +64,21 @@ const TAGS: { name: string; count: number; color: string }[] = [
   { name: "runbook", count: 148, color: "#7dcfb0" },
   { name: "payments", count: 139, color: "#c4a0e8" },
   { name: "postgres", count: 128, color: "#6ec8d8" },
+];
+
+const ACCESS_SOURCES: { name: string; count: number; color: string }[] = [
+  { name: "search", count: 2814, color: "#6ec8d8" },
+  { name: "open", count: 1280, color: "#8eb4f0" },
+  { name: "guide_find", count: 768, color: "#7dcfb0" },
+  { name: "guide_write", count: 253, color: "#c4a0e8" },
+];
+
+const TOP_ACCESSED: { name: string; count: number }[] = [
+  { name: "Patroni failover runbook", count: 94 },
+  { name: "Idempotency-Key on payouts", count: 81 },
+  { name: "When paging on datastore…", count: 73 },
+  { name: "OIDC group map for admins", count: 66 },
+  { name: "Prefer conventional commits", count: 58 },
 ];
 
 const SERIES_LEN: Record<Range, number> = { "7d": 7, "30d": 30, "90d": 48 };
@@ -100,10 +123,18 @@ function useCountUp(target: number, active: boolean, ms = 800): number {
   return n;
 }
 
-function AreaChart({ active, days }: { active: boolean; days: number }) {
+function AreaChart({
+  active,
+  days,
+  mode = "created",
+}: {
+  active: boolean;
+  days: number;
+  mode?: "created" | "accessed";
+}) {
   const series = useMemo(() => buildSeries(days), [days]);
   const w = 640;
-  const h = 160;
+  const h = 150;
   const pad = { t: 10, r: 6, b: 8, l: 6 };
   const max = Math.max(...series.map((d) => d.entries + d.guides), 1);
   const innerW = w - pad.l - pad.r;
@@ -120,12 +151,52 @@ function AreaChart({ active, days }: { active: boolean; days: number }) {
 
   const stacked = series.map((d) => d.entries + d.guides);
   const guidesOnly = series.map((d) => d.guides);
+  const accessed = series.map((d) =>
+    Math.round((d.entries + d.guides) * 1.35 + 4),
+  );
   const area = (vals: number[]) => {
     const line = toPoints(vals);
     const lastX = pad.l + innerW;
     const baseY = pad.t + innerH;
     return `M ${pad.l},${baseY} L ${line.replace(/ /g, " L ")} L ${lastX},${baseY} Z`;
   };
+
+  if (mode === "accessed") {
+    const aMax = Math.max(...accessed, 1);
+    const toA = (vals: number[]) =>
+      vals
+        .map((v, i) => {
+          const x = pad.l + (i / Math.max(1, vals.length - 1)) * innerW;
+          const y = pad.t + innerH - (v / aMax) * innerH;
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        })
+        .join(" ");
+    const areaA = (vals: number[]) => {
+      const line = toA(vals);
+      const lastX = pad.l + innerW;
+      const baseY = pad.t + innerH;
+      return `M ${pad.l},${baseY} L ${line.replace(/ /g, " L ")} L ${lastX},${baseY} Z`;
+    };
+    return (
+      <svg
+        className={
+          active ? "metrics-console-chart is-on" : "metrics-console-chart"
+        }
+        viewBox={`0 0 ${w} ${h}`}
+        role="img"
+        aria-label="Accesses over time"
+      >
+        <path d={areaA(accessed)} fill={GUIDE_COLOR} fillOpacity={0.4} />
+        <polyline
+          points={toA(accessed)}
+          fill="none"
+          stroke={GUIDE_COLOR}
+          strokeWidth={1.6}
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
 
   return (
     <svg
@@ -238,7 +309,7 @@ function Donut({
 }
 
 /**
- * Pitch-site Metrics console mock — SVG charts, not a product screenshot.
+ * Pitch-site Metrics mock: Storage left, Retrieval right, shared range.
  */
 export function MetricsConsole() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -254,6 +325,8 @@ export function MetricsConsole() {
   const createdN = useCountUp(kpis.created, active);
   const expiringN = useCountUp(kpis.expiring, active);
   const accessesN = useCountUp(kpis.accesses, active);
+  const uniqueN = useCountUp(kpis.unique, active);
+  const neverN = useCountUp(kpis.never, active);
   const spacesN = useCountUp(kpis.spaces, active);
 
   useEffect(() => {
@@ -263,7 +336,7 @@ export function MetricsConsole() {
       ([entry]) => {
         if (entry?.isIntersecting) setActive(true);
       },
-      { threshold: 0.3 },
+      { threshold: 0.25 },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -290,74 +363,138 @@ export function MetricsConsole() {
         </div>
       </div>
 
-      <p className="metrics-console-section">Storage</p>
-      <div className="metrics-console-kpis">
-        <div className="metrics-console-kpi">
-          <span>Total memories</span>
-          <strong>{totalN.toLocaleString()}</strong>
-        </div>
-        <div className="metrics-console-kpi is-split">
-          <span>Entries / guides</span>
-          <strong>
-            <em style={{ color: ENTRY_COLOR }}>{entriesN.toLocaleString()}</em>
-            {" / "}
-            <em style={{ color: GUIDE_COLOR }}>{guidesN.toLocaleString()}</em>
-          </strong>
-        </div>
-        <div className="metrics-console-kpi">
-          <span>Created in window</span>
-          <strong>{createdN.toLocaleString()}</strong>
-        </div>
-        <div className="metrics-console-kpi is-warn">
-          <span>Expiring in 14 days</span>
-          <strong>{expiringN.toLocaleString()}</strong>
-        </div>
-      </div>
+      <div className="metrics-console-columns">
+        <section className="metrics-console-pane" aria-label="Storage">
+          <p className="metrics-console-section">Storage</p>
+          <div className="metrics-console-kpis">
+            <div className="metrics-console-kpi">
+              <span>Total memories</span>
+              <strong>{totalN.toLocaleString()}</strong>
+            </div>
+            <div className="metrics-console-kpi is-split">
+              <span>Entries / guides</span>
+              <strong>
+                <em style={{ color: ENTRY_COLOR }}>
+                  {entriesN.toLocaleString()}
+                </em>
+                {" / "}
+                <em style={{ color: GUIDE_COLOR }}>
+                  {guidesN.toLocaleString()}
+                </em>
+              </strong>
+            </div>
+            <div className="metrics-console-kpi">
+              <span>Created in window</span>
+              <strong>{createdN.toLocaleString()}</strong>
+            </div>
+            <div className="metrics-console-kpi is-warn">
+              <span>Expiring in 14 days</span>
+              <strong>{expiringN.toLocaleString()}</strong>
+            </div>
+          </div>
 
-      <div className="metrics-console-card">
-        <p className="metrics-console-card-title">Created over time</p>
-        <AreaChart active={active} days={days} />
-      </div>
+          <div className="metrics-console-card">
+            <p className="metrics-console-card-title">Created over time</p>
+            <AreaChart active={active} days={days} />
+          </div>
 
-      <div className="metrics-console-split">
-        <div className="metrics-console-card">
-          <p className="metrics-console-card-title">Entries vs guides</p>
-          <Donut
-            entries={kpis.entries}
-            guides={kpis.guides}
-            active={active}
-          />
-        </div>
-        <div className="metrics-console-card">
-          <p className="metrics-console-card-title">Top tags</p>
-          <ul className="metrics-console-tags">
-            {TAGS.map((tag) => (
-              <li key={tag.name}>
-                <span className="metrics-console-tag-name">{tag.name}</span>
-                <span
-                  className="metrics-console-tag-bar"
-                  style={{
-                    width: `${(tag.count / maxTag) * 100}%`,
-                    background: tag.color,
-                  }}
-                />
-                <span className="metrics-console-tag-count">{tag.count}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+          <div className="metrics-console-card">
+            <p className="metrics-console-card-title">Entries vs guides</p>
+            <Donut
+              entries={kpis.entries}
+              guides={kpis.guides}
+              active={active}
+            />
+          </div>
 
-      <p className="metrics-console-section">Retrieval</p>
-      <div className="metrics-console-kpis metrics-console-kpis--retrieval">
-        <div className="metrics-console-kpi is-access">
-          <span>Accesses in window</span>
-          <strong>{accessesN.toLocaleString()}</strong>
-        </div>
-        <div className="metrics-console-kpi">
-          <span>Spaces with memories</span>
-          <strong>{spacesN.toLocaleString()}</strong>
-        </div>
+          <div className="metrics-console-card metrics-console-card--grow">
+            <p className="metrics-console-card-title">Top tags</p>
+            <ul className="metrics-console-tags">
+              {TAGS.map((tag) => (
+                <li key={tag.name}>
+                  <span className="metrics-console-tag-name">{tag.name}</span>
+                  <span
+                    className="metrics-console-tag-bar"
+                    style={{
+                      width: `${(tag.count / maxTag) * 100}%`,
+                      background: tag.color,
+                    }}
+                  />
+                  <span className="metrics-console-tag-count">{tag.count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="metrics-console-pane" aria-label="Retrieval">
+          <p className="metrics-console-section">Retrieval</p>
+          <div className="metrics-console-kpis">
+            <div className="metrics-console-kpi is-access">
+              <span>Accesses in window</span>
+              <strong>{accessesN.toLocaleString()}</strong>
+            </div>
+            <div className="metrics-console-kpi">
+              <span>Unique memories</span>
+              <strong>{uniqueN.toLocaleString()}</strong>
+            </div>
+            <div className="metrics-console-kpi">
+              <span>Never accessed</span>
+              <strong>{neverN.toLocaleString()}</strong>
+            </div>
+            <div className="metrics-console-kpi">
+              <span>Spaces with memories</span>
+              <strong>{spacesN.toLocaleString()}</strong>
+            </div>
+          </div>
+
+          <div className="metrics-console-card">
+            <p className="metrics-console-card-title">Accessed over time</p>
+            <AreaChart active={active} days={days} mode="accessed" />
+          </div>
+
+          <div className="metrics-console-card">
+            <p className="metrics-console-card-title">Accesses by source</p>
+            <ul className="metrics-console-tags">
+              {ACCESS_SOURCES.map((row) => (
+                <li key={row.name}>
+                  <span className="metrics-console-tag-name">{row.name}</span>
+                  <span
+                    className="metrics-console-tag-bar"
+                    style={{
+                      width: `${(row.count / ACCESS_SOURCES[0].count) * 100}%`,
+                      background: row.color,
+                    }}
+                  />
+                  <span className="metrics-console-tag-count">
+                    {row.count.toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="metrics-console-card metrics-console-card--grow">
+            <p className="metrics-console-card-title">Top accessed</p>
+            <ul className="metrics-console-tags metrics-console-tags--wide">
+              {TOP_ACCESSED.map((row) => (
+                <li key={row.name}>
+                  <span className="metrics-console-tag-name" title={row.name}>
+                    {row.name}
+                  </span>
+                  <span
+                    className="metrics-console-tag-bar"
+                    style={{
+                      width: `${(row.count / TOP_ACCESSED[0].count) * 100}%`,
+                      background: GUIDE_COLOR,
+                    }}
+                  />
+                  <span className="metrics-console-tag-count">{row.count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
       </div>
     </div>
   );

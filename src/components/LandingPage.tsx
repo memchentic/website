@@ -1,14 +1,14 @@
 import { LINKS } from "../constants";
 import { AccessDoor } from "./AccessDoor";
-import { CorpusPulse } from "./CorpusPulse";
 import { DeployCable } from "./DeployCable";
 import { HybridFusion } from "./HybridFusion";
-import { KindConstellation } from "./KindConstellation";
+import { CapabilitiesStage } from "./CapabilitiesStage";
+import { KindGuidePanel } from "./KindGuidePanel";
 import { McpSessionDemo } from "./McpSessionDemo";
+import { MemoriesConsole } from "./MemoriesConsole";
+import { MetricsConsole } from "./MetricsConsole";
 import { ProblemTheater } from "./ProblemTheater";
 import { Reveal } from "./Reveal";
-import { MetricsConsole } from "./MetricsConsole";
-import { ShotFigure, ShotLightbox } from "./ShotLightbox";
 import { VectorSpaceCube } from "./VectorSpaceCube";
 import { WhyRotator } from "./WhyRotator";
 
@@ -199,31 +199,23 @@ export function LandingPage() {
         </Reveal>
 
         <Reveal className="band band-alt" id="memory">
-          <div className="site-shell grid items-stretch gap-10 py-24 lg:grid-cols-2 lg:gap-14">
-            <div className="flex min-h-0 flex-col">
-              <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
-                Memory model
-              </p>
-              <h2 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-                Shaped the way people think — not one blob of text.
-              </h2>
-              <p className="mt-6 text-base leading-relaxed text-muted">
-                Agents get a short digest first, then open the full memory when
-                they need it — so context stays useful instead of drowning the
-                chat. Hover a kind.
-              </p>
-              <div className="mt-10 flex min-h-0 flex-1 flex-col sm:mt-12">
-                <KindConstellation />
-              </div>
+          <div className="site-shell py-24">
+            <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
+              Memory model
+            </p>
+            <h2 className="max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+              Shaped the way people think — not one blob of text.
+            </h2>
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
+              Agents get a short digest first, then open the full memory when
+              they need it — so context stays useful instead of drowning the
+              chat. Typed entries, guides, tags, and spaces keep the corpus
+              browsable.
+            </p>
+            <div className="memory-stage mt-10 sm:mt-12">
+              <MemoriesConsole />
+              <KindGuidePanel />
             </div>
-            <ShotFigure className="shot-frame--fill">
-              <ShotLightbox
-                src={`${import.meta.env.BASE_URL}screenshots/memories.png`}
-                alt="Memchentic Memories page listing typed entries and guides"
-                width={1200}
-                height={2050}
-              />
-            </ShotFigure>
           </div>
         </Reveal>
 
@@ -233,15 +225,13 @@ export function LandingPage() {
               Hybrid retrieval
             </p>
             <h2 className="max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              A real database — relational and vectorized.
+              Ask once — get the memory that actually fits.
             </h2>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
-              Memchentic stores memory in Postgres: structured rows you can
-              filter, full-text search for exact language, and pgvector
-              embeddings for meaning. MCP{" "}
-              <code className="hybrid-code">find</code> /{" "}
-              <code className="hybrid-code">guide_find</code> run the same
-              hybrid path — hard queries and similarity, fused.
+              Exact matches, meaning, and structure all weigh in — then weak
+              near-duplicates get refused and the rest rerank into a short list
+              your agents can trust. Continuity without drowning the next turn
+              in almost-right noise.
             </p>
 
             <div className="hybrid-stage mt-16 sm:mt-20">
@@ -257,42 +247,16 @@ export function LandingPage() {
               Beyond remember / find
             </p>
             <h2 className="max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Audit, portable export, and hooks for the rest of your stack.
+              The rest of the job — after the first save.
             </h2>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
-              The same MCP surface agents already use — plus revision history,
-              usefulness feedback, bounded export, ingest suggestions from prose
-              (heuristics first, optional chat LLM extract, optional
-              decision-model gate), consolidation-aware hygiene, and HTTPS
-              mutation webhooks for downstream runtimes.
+              Memory that lasts has to be audited, pruned, moved, and wired into
+              the tools around it. These are the surfaces that keep a corpus
+              honest once agents start writing for real.
             </p>
-            <ul className="mt-10 grid gap-4 text-base text-muted sm:grid-cols-2 lg:max-w-3xl">
-              <li>
-                <strong className="font-medium text-ink">History</strong> —
-                field-level revisions per memory
-              </li>
-              <li>
-                <strong className="font-medium text-ink">Feedback</strong> —
-                useful / stale / wrong signals that steer ranking
-              </li>
-              <li>
-                <strong className="font-medium text-ink">Export</strong> —
-                full rows you are allowed to read, capped for safety
-              </li>
-              <li>
-                <strong className="font-medium text-ink">Ingest suggest</strong>
-                — propose from prose, optional LLM extract, optional Jev/Kev
-                score, confirm before write
-              </li>
-              <li>
-                <strong className="font-medium text-ink">Hygiene</strong> —
-                conflicts, merges, consolidation proposals
-              </li>
-              <li>
-                <strong className="font-medium text-ink">Webhooks</strong> —
-                POST create/update/delete to your agent platform
-              </li>
-            </ul>
+            <div className="mt-12 sm:mt-14">
+              <CapabilitiesStage />
+            </div>
           </div>
         </Reveal>
 
@@ -334,25 +298,22 @@ export function LandingPage() {
         </Reveal>
 
         <Reveal className="band band-alt" id="metrics">
-          <div className="site-shell grid items-stretch gap-10 py-24 lg:grid-cols-2 lg:gap-14">
-            <div className="flex min-h-0 flex-col">
-              <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
-                Corpus metrics
-              </p>
-              <h2 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-                See the shape of what your agents remember.
-              </h2>
-              <p className="mt-6 text-base leading-relaxed text-muted">
-                The console ships a Metrics view — totals, created-over-time,
-                entry types, spaces, tags, and creators — scoped by the same ACL
-                as every memory read. Operators get a pulse without paging the
-                whole corpus.
-              </p>
-              <div className="mt-10 flex min-h-0 flex-1 flex-col sm:mt-12">
-                <CorpusPulse />
-              </div>
+          <div className="site-shell py-24">
+            <p className="mb-3 text-sm font-medium tracking-[0.12em] text-faint uppercase">
+              Corpus metrics
+            </p>
+            <h2 className="max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+              See the shape of what your agents remember.
+            </h2>
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
+              The console ships a Metrics view — totals, created-over-time,
+              entry types, spaces, tags, and creators — scoped by the same ACL
+              as every memory read. Operators get a pulse without paging the
+              whole corpus.
+            </p>
+            <div className="mt-10 sm:mt-12">
+              <MetricsConsole />
             </div>
-            <MetricsConsole />
           </div>
         </Reveal>
 
