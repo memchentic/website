@@ -7,6 +7,7 @@ import { KindConstellation } from "./KindConstellation";
 import { McpSessionDemo } from "./McpSessionDemo";
 import { ProblemTheater } from "./ProblemTheater";
 import { Reveal } from "./Reveal";
+import { MetricsConsole } from "./MetricsConsole";
 import { ShotFigure, ShotLightbox } from "./ShotLightbox";
 import { VectorSpaceCube } from "./VectorSpaceCube";
 import { WhyRotator } from "./WhyRotator";
@@ -351,14 +352,7 @@ export function LandingPage() {
                 <CorpusPulse />
               </div>
             </div>
-            <ShotFigure className="shot-frame--fill">
-              <ShotLightbox
-                src={`${import.meta.env.BASE_URL}screenshots/metrics.png`}
-                alt="Memchentic Metrics page with colored charts for entries, guides, types, and spaces"
-                width={1200}
-                height={2050}
-              />
-            </ShotFigure>
+            <MetricsConsole />
           </div>
         </Reveal>
 
